@@ -3,830 +3,921 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>黄奕铨 | MAGIC UI 级全栈视觉交互系统</title>
-
+    <title>黄奕铨 | AI-Native Agent Engineer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* 🌌 赛博高奢暗黑科技色卡 */
-            --bg-master: #090d16;       /* 深邃极夜蓝底色 */
-            --bg-card-glass: rgba(15, 23, 42, 0.65); /* 浓郁黑玻璃 */
-            --border-glass: rgba(249, 115, 22, 0.25);  /* 暖橙微光边框 */
-
-            /* 极光霓虹中心 */
-            --color-primary: #f97316;   /* 脉冲能量橙 */
-            --color-secondary: #38bdf8; /* 全息晴空蓝 */
-            --color-purple: #a855f7;    /* 极光深紫 */
-            --color-success: #34d399;   /* 荧光森绿 */
-
-            /* 暗色高对比度文本层 */
-            --text-high: #f8fafc;       /* 纯白高亮 */
-            --text-base: #cbd5e1;       /* 银灰主字 */
-            --text-muted: #64748b;      /* 科技幽灵灰 */
-
-            --screen-padding: 8vw;
-            --font-mono: "Fira Code", Menlo, Monaco, Consolas, monospace;
-
-            /* 暗夜高维空间发光群 */
-            --shadow-spatial-sm: 0 4px 20px rgba(0, 0, 0, 0.5);
-            --shadow-spatial-md: 0 20px 40px -12px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255,255,255,0.1);
-            --shadow-spatial-lg: 0 0 50px -10px rgba(249, 115, 22, 0.25), inset 0 1px 2px rgba(255,255,255,0.15);
+            --bg: #fbfbfd;
+            --bg-mesh-1: rgba(249, 115, 22, 0.07);
+            --bg-mesh-2: rgba(56, 189, 248, 0.06);
+            --bg-mesh-3: rgba(168, 85, 247, 0.05);
+            --glass: rgba(255, 255, 255, 0.62);
+            --glass-hover: rgba(255, 255, 255, 0.82);
+            --border: rgba(0, 0, 0, 0.06);
+            --border-glow: rgba(249, 115, 22, 0.35);
+            --shadow-sm: 0 2px 16px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.06);
+            --primary: #e8620a;
+            --primary-dim: rgba(249, 115, 22, 0.1);
+            --cyan: #0284c7;
+            --cyan-dim: rgba(56, 189, 248, 0.1);
+            --purple: #9333ea;
+            --green: #059669;
+            --text-high: #1d1d1f;
+            --text-base: #424245;
+            --text-muted: #86868b;
+            --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+            --font-mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+            --pad-x: clamp(1.15rem, 4vw, 3rem);
+            --max-w: 1080px;
+            --radius: 16px;
+            --radius-lg: 20px;
         }
 
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        html, body {
-            background-color: var(--bg-master);
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
             color: var(--text-base);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow-x: hidden;
-            letter-spacing: -0.01em;
-            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.65;
         }
 
-        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           🌌 物理画布总线：独立 3D 渲染上下文
-           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-        .spatial-3d-stage {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 1; pointer-events: none;
-            perspective: 2500px;
-            transform-style: preserve-3d;
-            will-change: transform;
+        /* ── Apple-style 透明渐变背景 ── */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 70% 55% at 15% 10%, var(--bg-mesh-1), transparent 55%),
+                radial-gradient(ellipse 60% 50% at 85% 20%, var(--bg-mesh-2), transparent 50%),
+                radial-gradient(ellipse 50% 45% at 50% 85%, var(--bg-mesh-3), transparent 50%),
+                linear-gradient(180deg, #ffffff 0%, var(--bg) 40%, #f5f5f7 100%);
+        }
+
+        /* ── 3D 凹陷动态网格层 ── */
+        .mesh-stage {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none;
+            perspective: 1800px; overflow: hidden;
+            mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, black 30%, transparent 88%);
+            -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, black 30%, transparent 88%);
+        }
+        #meshCanvas {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            opacity: 0.85;
+        }
+        .mesh-vignette {
+            position: fixed; inset: 0; z-index: 2; pointer-events: none;
+            background: radial-gradient(ellipse 75% 65% at 50% 42%, transparent 35%, rgba(251,251,253,0.55) 100%);
+        }
+        @keyframes orb-drift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(2vw, -1.5vh) scale(1.04); }
+            66% { transform: translate(-1.5vw, 2vh) scale(0.97); }
+        }
+        .float-orb {
+            position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 1;
+            animation: orb-drift 18s ease-in-out infinite;
+        }
+        .float-orb-a { top: 8%; right: 12%; width: 320px; height: 320px; background: rgba(249,115,22,0.09); animation-delay: 0s; }
+        .float-orb-b { bottom: 18%; left: 8%; width: 380px; height: 380px; background: rgba(56,189,248,0.07); animation-delay: -6s; }
+        .float-orb-c { top: 52%; left: 42%; width: 260px; height: 260px; background: rgba(168,85,247,0.06); animation-delay: -12s; }
+
+        /* ── Magic UI: Border Beam ── */
+        @keyframes border-beam-spin {
+            to { transform: rotate(360deg); }
+        }
+        .border-beam {
+            position: relative; border-radius: var(--radius-lg); overflow: hidden; isolation: isolate;
+        }
+        .border-beam::before {
+            content: ''; position: absolute; inset: 0; padding: 1px; border-radius: inherit;
+            background: conic-gradient(from var(--beam-angle, 0deg), transparent 60%, var(--primary) 78%, var(--cyan) 88%, transparent 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            opacity: 0; transition: opacity 0.45s;
+            animation: border-beam-spin 4s linear infinite;
+        }
+        .border-beam:hover::before, .border-beam.featured::before { opacity: 0.85; }
+
+        /* ── Magic UI: Magic Card (spotlight) ── */
+        .magic-card {
+            position: relative;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            box-shadow: var(--shadow-sm);
             overflow: hidden;
+            transition: border-color 0.35s, transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s, background 0.35s;
+        }
+        .magic-card::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+            background: radial-gradient(500px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(249,115,22,0.06), transparent 50%);
+            opacity: 0; transition: opacity 0.35s;
+        }
+        .magic-card:hover::after { opacity: 1; }
+        .magic-card:hover {
+            border-color: rgba(249,115,22,0.18);
+            background: var(--glass-hover);
+            box-shadow: var(--shadow-md);
+        }
+        .magic-card-inner { position: relative; z-index: 2; }
+
+        /* ── Magic UI: Badge Pill ── */
+        .badge-pill {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            padding: 0.35rem 0.85rem; border-radius: 999px;
+            font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+            letter-spacing: 0.04em; text-transform: uppercase;
+            background: var(--primary-dim); color: var(--primary);
+            border: 1px solid rgba(249,115,22,0.25);
+        }
+        .badge-pill .pulse-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: var(--primary);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(249,115,22,0.5); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(249,115,22,0); }
         }
 
-        #tactileCanvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1;
+        /* ── Magic UI: Marquee ── */
+        @keyframes marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+        .marquee-wrap {
+            overflow: hidden; mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+            -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+        }
+        .marquee-track {
+            display: flex; gap: 0.65rem; width: max-content;
+            animation: marquee 28s linear infinite;
+        }
+        .marquee-track:hover { animation-play-state: paused; }
+        .marquee-tag {
+            flex-shrink: 0; padding: 0.4rem 0.9rem; border-radius: 980px;
+            font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500;
+            background: rgba(255,255,255,0.7); border: 1px solid var(--border);
+            color: var(--text-base); white-space: nowrap;
+            box-shadow: var(--shadow-sm);
         }
 
-        .magic-glow-blob {
-            position: absolute; border-radius: 50%; filter: blur(110px); opacity: 0.45;
-            transform-style: preserve-3d;
+        /* ── Layout ── */
+        .page { position: relative; z-index: 10; max-width: var(--max-w); margin: 0 auto; padding: 0 var(--pad-x); }
+
+        .section {
+            padding: clamp(3.5rem, 8vh, 6rem) 0;
+            scroll-margin-top: 1.5rem;
         }
-        .blob-orange {
-            top: -10%; right: 5%; width: 45vw; height: 45vw;
-            background: radial-gradient(circle, rgba(249,115,22,0.35) 0%, transparent 70%);
-            transform: translateZ(-100px);
+        .section-head { margin-bottom: clamp(1.75rem, 4vw, 2.75rem); }
+        .section-slug {
+            font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600;
+            color: var(--primary); letter-spacing: 0.12em; text-transform: uppercase;
+            margin-bottom: 0.5rem; display: block;
         }
-        .blob-blue {
-            bottom: -10%; left: -5%; width: 50vw; height: 50vw;
-            background: radial-gradient(circle, rgba(56,189,248,0.3) 0%, transparent 70%);
-            transform: translateZ(-200px);
+        .section-title {
+            font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 600;
+            color: var(--text-high); letter-spacing: -0.025em; line-height: 1.15;
         }
-        .blob-purple {
-            top: 40%; left: 30%; width: 35vw; height: 35vw;
-            background: radial-gradient(circle, rgba(168,85,247,0.25) 0%, transparent 70%);
-            transform: translateZ(-150px);
+        .section-desc {
+            margin-top: 0.75rem; font-size: 0.95rem; color: var(--text-muted); max-width: 540px;
         }
 
-        .parallax-giant-backdrop {
-            position: absolute; left: 4vw; font-size: 13vw; font-weight: 900;
-            color: rgba(255, 255, 255, 0.015); font-family: var(--font-mono);
-            white-space: nowrap; user-select: none; z-index: 2;
-            transform-style: preserve-3d;
+        /* ── Hero · Apple-style ── */
+        .hero-apple {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center;
+            padding: clamp(2rem, 6vh, 4rem) 0 clamp(1.5rem, 4vh, 2.5rem);
+        }
+        .hero-avatar {
+            width: 88px; height: 88px; border-radius: 50%;
+            overflow: hidden; margin-bottom: 1.25rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+        .hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .hero-eyebrow {
+            font-size: 0.8125rem; font-weight: 500; color: var(--primary);
+            letter-spacing: 0.02em; margin-bottom: 0.5rem;
+        }
+        .hero-apple h1 {
+            font-size: clamp(2.5rem, 7vw, 4rem); font-weight: 700;
+            letter-spacing: -0.025em; line-height: 1.08;
+            color: var(--text-high); margin-bottom: 0.35rem;
+        }
+        .hero-subtitle {
+            font-size: clamp(1.05rem, 2.5vw, 1.375rem);
+            font-weight: 400; color: var(--text-muted);
+            letter-spacing: -0.01em; margin-bottom: 1.75rem;
+        }
+        .hero-contact {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            align-items: center; gap: 0.35rem 0;
+            font-size: 0.8125rem; color: var(--text-muted);
+            margin-bottom: 1.75rem;
+        }
+        .hero-contact span { white-space: nowrap; }
+        .hero-contact .sep { margin: 0 0.65rem; color: var(--border); user-select: none; }
+        .hero-contact strong { color: var(--text-base); font-weight: 500; }
+        .hero-bio {
+            font-size: clamp(0.9375rem, 2vw, 1.0625rem); line-height: 1.7;
+            color: var(--text-base); max-width: 580px;
+            font-weight: 400;
         }
 
-        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           📦 内容排版上层核心
-           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-        .spatial-section {
-            position: relative;
-            z-index: 10;
-            min-height: auto;
-            display: flex; flex-direction: column; justify-content: center;
-            padding: 8rem var(--screen-padding) 6rem;
-            max-width: 1450px; margin: 0 auto;
+        /* ── Bento Grid ── */
+        .bento-grid {
+            display: grid; gap: 1rem;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: minmax(120px, auto);
         }
-
-        /* 🧭 侧边导航细节打磨 */
-        .spatial-nav {
-            position: fixed; right: 4vw; top: 50%; transform: translateY(-50%);
-            z-index: 90; display: flex; flex-direction: column; gap: 2.2rem;
+        .bento-item { padding: clamp(1.25rem, 3vw, 1.75rem); }
+        .bento-item h3 {
+            font-size: 1.05rem; font-weight: 700; color: var(--text-high);
+            margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.5rem;
         }
-        .nav-node {
-            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; text-decoration: none;
-        }
-        .nav-node::before {
-            content: ''; width: 8px; height: 8px; border-radius: 50%; background: #334155;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform;
-        }
-        /* ✨ 细节打磨：为激活态导航节点增加呼吸脉冲光圈 */
-        .nav-node.active::after {
-            content: ''; position: absolute; width: 20px; height: 20px; border: 1px solid var(--color-primary);
-            border-radius: 50%; animation: navPulse 2s infinite ease-out; pointer-events: none;
-        }
-        @keyframes navPulse {
-            0% { transform: scale(0.5); opacity: 1; }
-            100% { transform: scale(1.8); opacity: 0; }
-        }
-        .nav-node-index {
-            position: absolute; right: 50px; font-family: var(--font-mono); font-size: 0.75rem;
-            color: var(--color-primary); font-weight: 700; opacity: 0; transform: translate3d(10px, 0, 0);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap;
-        }
-        .nav-node:hover .nav-node-index { opacity: 1; transform: translate3d(0,0,0); }
-        .nav-node:hover::before, .nav-node.active::before { background: var(--color-primary); transform: scale(1.6); box-shadow: 0 0 12px var(--color-primary); }
-
-        /* --- Section 01: 首屏 --- */
-        .grid-hero { display: grid; grid-template-columns: 1.3fr 1.7fr; gap: 5vw; align-items: center; }
-        .hero-identity-wrapper { display: flex; flex-direction: column; gap: 2.2rem; }
-
-        .avatar-brand-row { display: flex; align-items: center; gap: 2.5rem; }
-        .user-avatar-slot {
-            width: 160px; height: 160px; max-width: 25vw; max-height: 25vw;
-            border-radius: 38px; background: rgba(30, 41, 59, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-            overflow: hidden; flex-shrink: 0; position: relative;
+        .bento-item h3 .icon {
+            width: 28px; height: 28px; border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.85rem; flex-shrink: 0;
         }
-        .user-avatar-slot:hover {
-            transform: scale(1.04) rotate(1deg); border-color: var(--color-primary);
-            box-shadow: 0 0 30px rgba(249, 115, 22, 0.3);
+        .bento-item p, .bento-item li { font-size: 0.875rem; line-height: 1.7; color: var(--text-base); }
+        .bento-item ul { list-style: none; }
+        .bento-item li {
+            padding-left: 1rem; position: relative; margin-bottom: 0.45rem;
         }
-        .user-avatar-slot img { width: 100%; height: 100%; object-fit: cover; }
-
-        .hero-names h1 { font-size: 4.5rem; font-weight: 900; line-height: 1; color: var(--text-high); letter-spacing: -0.04em; margin-bottom: 0.6rem; }
-        .hero-names .job-title { font-family: var(--font-mono); font-size: 1rem; color: var(--color-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-
-        .metadata-cluster { border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 1.8rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem; }
-        .metadata-item { font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; transition: all 0.3s ease; }
-        .metadata-item span { display: block; font-size: 1.05rem; color: var(--text-high); font-weight: 600; font-family: -apple-system, sans-serif; margin-top: 0.2rem; }
-        .metadata-item:hover { transform: translate3d(4px, 0, 0); }
-        .metadata-item:hover span { color: var(--color-primary); }
-
-        .hero-profile { padding-left: 2.2rem; border-left: 3px solid var(--color-primary); }
-        .hero-profile h3 { font-size: 0.85rem; font-family: var(--font-mono); color: var(--color-primary); margin-bottom: 0.8rem; letter-spacing: 0.1rem;}
-        .hero-profile p { font-size: 1.05rem; color: var(--text-base); line-height: 1.8; text-align: justify; margin-bottom: 1.8rem; }
-
-        /* 🔮 ✨ 细节打磨：3D 触感磨砂卡片（注入全息高光反光机制） */
-        .structural-tilt {
-            background-color: var(--bg-card-glass); border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            box-shadow: var(--shadow-spatial-md); transform-style: preserve-3d; backface-visibility: hidden;
-            position: relative; overflow: hidden;
-            transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease, border-color 0.4s ease;
-            will-change: transform;
+        .bento-item li::before {
+            content: ''; position: absolute; left: 0; top: 0.6em;
+            width: 4px; height: 4px; border-radius: 50%; background: var(--primary);
         }
-        /* 全息高光伪元素层 */
-        .structural-tilt::before {
-            content: ''; position: absolute; inset: 0; z-index: 5; pointer-events: none;
-            background: radial-gradient(circle 280px at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255, 255, 255, 0.07), transparent 80%);
-            opacity: 0; transition: opacity 0.4s ease;
+        .span-8 { grid-column: span 8; }
+        .span-6 { grid-column: span 6; }
+        .span-4 { grid-column: span 4; }
+        .span-12 { grid-column: span 12; }
+
+        .icon-agent { background: var(--primary-dim); color: var(--primary); }
+        .icon-cv { background: var(--cyan-dim); color: var(--cyan); }
+        .icon-stack { background: rgba(168,85,247,0.15); color: var(--purple); }
+        .icon-honor { background: rgba(52,211,153,0.12); color: var(--green); }
+
+        .stack-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.75rem; }
+        .stack-chip {
+            font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500;
+            padding: 0.3rem 0.65rem; border-radius: 6px;
+            background: rgba(255,255,255,0.65); border: 1px solid var(--border);
+            color: var(--text-base);
         }
-        .structural-tilt:hover::before { opacity: 1; }
+        .stack-chip.highlight { border-color: rgba(249,115,22,0.35); color: var(--primary); background: var(--primary-dim); }
 
-        .card-education { padding: 2rem; }
-        .edu-headline { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem; transform: translateZ(20px); }
-        .edu-headline h4 { font-size: 1.25rem; font-weight: 900; color: var(--text-high); }
-        .edu-headline .degree { color: var(--color-secondary); font-weight: 700; font-size: 0.95rem; }
-        .edu-timeline { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.8rem; display: block; transform: translateZ(15px); }
-        .edu-details { font-size: 0.95rem; color: var(--text-base); line-height: 1.7; transform: translateZ(10px); }
-
-        /* --- Section 02: 资质矩阵 --- */
-        .section-caption { margin-bottom: 2.5rem; }
-        .section-caption .slug { font-family: var(--font-mono); color: var(--color-primary); font-size: 0.85rem; font-weight: 700; display: block; margin-bottom: 0.3rem;}
-        .section-caption h2 { font-size: 3rem; font-weight: 900; color: var(--text-high); letter-spacing: -0.03em; }
-
-        .matrix-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8rem; }
-
-        .matrix-card { padding: 2.5rem 2rem; }
-        .matrix-card h3 { font-size: 1.3rem; font-weight: 800; color: var(--text-high); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; transform: translateZ(25px); }
-        .matrix-card h3::before {
-            content: ''; display: inline-block; width: 8px; height: 8px;
-            background: var(--color-primary); transform: rotate(45deg); box-shadow: 0 0 8px var(--color-primary);
+        .edu-row {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            flex-wrap: wrap; gap: 0.35rem 1rem; margin-bottom: 0.35rem;
         }
-        .matrix-card p { font-size: 0.95rem; color: var(--text-base); line-height: 1.75; text-align: justify; transform: translateZ(15px); }
-        .matrix-card ul { list-style: none; transform: translateZ(15px); }
-        .matrix-card li { margin-bottom: 0.6rem; color: var(--text-base); font-size: 0.95rem; display: flex; align-items: center; gap: 0.6rem; }
-        .matrix-card li::before {
-            content: ''; display: inline-block; width: 5px; height: 10px;
-            border-bottom: 2px solid var(--color-success); border-right: 2px solid var(--color-success);
-            transform: rotate(45deg); margin-bottom: 2px; flex-shrink: 0;
+        .edu-row h4 { font-size: 1rem; font-weight: 700; color: var(--text-high); }
+        .edu-date { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+        .edu-degree { font-size: 0.85rem; color: var(--cyan); font-weight: 500; margin-bottom: 0.5rem; }
+
+        /* ── Project Pipeline ── */
+        .project-list { display: flex; flex-direction: column; gap: 1rem; }
+        .project-item {
+            cursor: pointer; padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1.25rem, 3vw, 2rem);
+            display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center;
         }
-        .tag-date { display: inline-block; padding: 0.3rem 0.8rem; background: rgba(249, 115, 22, 0.15); color: var(--color-primary); font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; border-radius: 8px; margin-bottom: 1rem; transform: translateZ(20px); }
-
-        /* --- Section 03: 项目流水线 --- */
-        .stream-pipeline { display: flex; flex-direction: column; gap: 1rem; }
-
-        .pipeline-item {
-            position: relative;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 2rem 2.2rem; background-color: rgba(15, 23, 42, 0.45); border: 1px solid rgba(255, 255, 255, 0.05);
-            cursor: pointer; transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease, border-color 0.4s ease, padding 0.4s ease, background-color 0.4s ease;
+        .project-item.featured {
+            background: linear-gradient(135deg, rgba(249,115,22,0.04) 0%, rgba(255,255,255,0.75) 100%);
         }
-        .pipeline-item:hover { padding-left: 2.8rem; padding-right: 2.8rem; background-color: rgba(30, 41, 59, 0.7); }
-        .pipeline-item::after {
-            content: ''; position: absolute; left: 24px; bottom: 0; width: 0; height: 2px;
-            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); transition: width 0.4s ease;
+        .project-item .proj-index {
+            font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);
+            letter-spacing: 0.08em; margin-bottom: 0.35rem;
         }
-        .pipeline-item:hover::after { width: calc(100% - 48px); }
-
-        .pipeline-title-group { transform: translateZ(20px); }
-        .pipeline-title-group h3 { font-size: 1.65rem; font-weight: 800; color: var(--text-high); transition: color 0.3s ease; letter-spacing: -0.01em; }
-        .pipeline-item:hover h3 { color: var(--color-primary); }
-        .pipeline-title-group .terminal-prefix { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; text-transform: uppercase; }
-
-        .pipeline-meta { text-align: right; transform: translateZ(25px); }
-        .pipeline-meta .position { font-size: 1rem; font-weight: 700; color: var(--text-high); }
-        .pipeline-meta .tech-core { font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-secondary); margin-top: 0.3rem; text-transform: uppercase; display: block; font-weight: 600;}
-
-        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           🏁 交互弹窗总线
-           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-        .overlay-mask {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(5, 8, 16, 0.6); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            z-index: 200; display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        .project-item h3 {
+            font-size: clamp(1.05rem, 2.5vw, 1.35rem); font-weight: 700;
+            color: var(--text-high); letter-spacing: -0.02em; margin-bottom: 0.35rem;
+            transition: color 0.3s;
         }
-        .overlay-mask.active { opacity: 1; pointer-events: auto; }
-
-        .modal-container {
-            background-color: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1);
-            width: 92%; max-width: 880px; max-height: 85vh; padding: 3.5rem; border-radius: 32px;
-            transform: translate3d(0, 20px, 0); opacity: 0; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow-y: auto; position: relative; box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+        .project-item:hover h3 { color: var(--primary); }
+        .project-item .proj-role { font-size: 0.85rem; color: var(--cyan); font-weight: 500; margin-bottom: 0.5rem; }
+        .project-item .proj-brief { font-size: 0.85rem; color: var(--text-muted); line-height: 1.65; max-width: 620px; }
+        .project-item .proj-arrow {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); font-size: 1.1rem;
+            transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
         }
-        .overlay-mask.active .modal-container { transform: translate3d(0, 0, 0); opacity: 1; border-color: var(--color-primary); }
-
-        .btn-close-modal {
-            position: absolute; top: 2rem; right: 2rem; background: rgba(255, 255, 255, 0.05);
-            color: var(--text-high); border: none; width: 40px; height: 40px; border-radius: 50%;
-            cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;
+        .project-item:hover .proj-arrow {
+            background: var(--primary); border-color: var(--primary); color: #fff;
+            transform: translateX(4px); box-shadow: 0 0 20px rgba(249,115,22,0.35);
         }
-        .btn-close-modal:hover { background: var(--color-primary); color: #fff; transform: rotate(90deg); }
-
-        .modal-inject h2 { font-size: 2.1rem; font-weight: 900; color: var(--text-high); letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 0.6rem; }
-        .modal-inject .badge-tags { margin-bottom: 1.8rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .modal-inject .stack-tag {
-            font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem;
-            padding: 0.35rem 0.75rem; border-radius: 8px; background: rgba(249, 115, 22, 0.15); color: var(--color-primary);
-        }
-        .modal-inject h4 { font-size: 1.15rem; font-weight: 800; color: var(--text-high); margin-top: 1.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
-        .modal-inject h4::before { content: ''; display: inline-block; width: 4px; height: 16px; background: var(--color-secondary); border-radius: 2px; }
-        .modal-inject p, .modal-inject ul { color: var(--text-base); line-height: 1.8; font-size: 1rem; text-align: justify; }
-        .modal-inject li { margin-bottom: 0.5rem; list-style-position: inside; color: var(--text-base); }
-        .modal-inject strong { color: var(--text-high); }
-
-        /* 📱 平板 / 窄屏降级 */
-        @media (max-width: 1200px) {
-            :root { --screen-padding: 5vw; }
-            .spatial-3d-stage { display: none !important; }
-            .spatial-section { padding: 5rem var(--screen-padding) 3rem; }
-            .grid-hero { grid-template-columns: 1fr; gap: 2.5rem; }
-            .avatar-brand-row { flex-direction: column; align-items: flex-start; gap: 1.2rem; }
-            .user-avatar-slot { width: 130px; height: 130px; max-width: none; max-height: none; border-radius: 28px; }
-            .hero-profile { padding-left: 0; border-left: none; border-top: 3px solid var(--color-primary); padding-top: 1.8rem; }
-            .matrix-container { grid-template-columns: 1fr; gap: 1.2rem; }
-            .structural-tilt { transform: none !important; box-shadow: var(--shadow-spatial-sm) !important; border-color: rgba(255,255,255,0.08) !important;}
-            .structural-tilt::before { display: none !important; }
-            .edu-headline, .edu-timeline, .edu-details, .matrix-card h3, .matrix-card p, .matrix-card ul, .tag-date, .pipeline-title-group, .pipeline-meta { transform: none !important; }
-            .pipeline-item { position: relative; flex-direction: column; align-items: flex-start; gap: 0.8rem; padding: 1.6rem 1.4rem; }
-            .pipeline-meta { text-align: left; }
-            .spatial-nav, .parallax-giant-backdrop { display: none !important; }
-            .modal-container { padding: 2.5rem 1.5rem; }
+        .featured-label {
+            display: inline-block; font-family: var(--font-mono); font-size: 0.65rem;
+            padding: 0.2rem 0.55rem; border-radius: 4px; margin-left: 0.5rem;
+            background: var(--primary-dim); color: var(--primary); vertical-align: middle;
         }
 
-        /* 📱 移动端底部导航（替代隐藏侧边栏） */
-        .mobile-nav-bar {
-            display: none;
-            position: fixed; bottom: 0; left: 0; right: 0;
-            z-index: 100;
-            background: rgba(9, 13, 22, 0.92);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(249, 115, 22, 0.2);
-            padding: 0.6rem 0.5rem;
-            padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+        /* ── Scroll Reveal ── */
+        .reveal {
+            opacity: 0; transform: translateY(28px);
+            transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
         }
-        .mobile-nav-bar-inner {
-            display: flex; justify-content: space-around; align-items: center;
-            max-width: 480px; margin: 0 auto;
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        /* ── Navigation ── */
+        .side-nav {
+            position: fixed; right: clamp(1rem, 3vw, 2.5rem); top: 50%;
+            transform: translateY(-50%); z-index: 90;
+            display: flex; flex-direction: column; gap: 1.5rem;
         }
-        .mobile-nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
-            padding: 0.5rem 0.25rem; text-decoration: none; color: var(--text-muted);
-            font-family: var(--font-mono); font-size: 0.6rem; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.03em;
-            transition: color 0.3s ease;
+        .side-nav a {
+            width: 10px; height: 10px; border-radius: 50%; background: #d2d2d7;
+            text-decoration: none; position: relative; transition: all 0.35s;
+        }
+        .side-nav a.active, .side-nav a:hover {
+            background: var(--primary); transform: scale(1.5);
+            box-shadow: 0 0 8px rgba(249,115,22,0.3);
+        }
+        .side-nav a .tip {
+            position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
+            white-space: nowrap; font-family: var(--font-mono); font-size: 0.7rem;
+            font-weight: 600; color: var(--primary); opacity: 0; transition: opacity 0.25s;
+            pointer-events: none;
+        }
+        .side-nav a:hover .tip { opacity: 1; }
+
+        .mobile-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(251,251,253,0.82); backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-top: 1px solid var(--border);
+            padding: 0.55rem 0.4rem;
+            padding-bottom: calc(0.55rem + env(safe-area-inset-bottom, 0px));
+        }
+        .mobile-nav-inner { display: flex; justify-content: space-around; max-width: 400px; margin: 0 auto; }
+        .mobile-nav a {
+            flex: 1; text-align: center; padding: 0.45rem 0.25rem;
+            text-decoration: none; font-size: 0.72rem; font-weight: 600;
+            color: var(--text-muted); transition: color 0.25s;
             -webkit-tap-highlight-color: transparent;
         }
-        .mobile-nav-item::before {
-            content: ''; width: 6px; height: 6px; border-radius: 50%;
-            background: #334155; transition: all 0.3s ease;
-        }
-        .mobile-nav-item.active { color: var(--color-primary); }
-        .mobile-nav-item.active::before {
-            background: var(--color-primary); transform: scale(1.5);
-            box-shadow: 0 0 8px var(--color-primary);
-        }
+        .mobile-nav a.active { color: var(--primary); }
 
-        /* 📱 手机端精细适配 */
+        /* ── Modal ── */
+        .overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(255,255,255,0.45); backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s;
+        }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .modal {
+            width: 92%; max-width: 780px; max-height: 85vh; overflow-y: auto;
+            padding: clamp(1.75rem, 4vw, 2.75rem);
+            transform: translateY(24px) scale(0.97); opacity: 0;
+            transition: all 0.45s cubic-bezier(0.16,1,0.3,1);
+            -webkit-overflow-scrolling: touch;
+        }
+        .overlay.active .modal { transform: translateY(0) scale(1); opacity: 1; }
+        .modal-close {
+            position: absolute; top: 1.25rem; right: 1.25rem;
+            width: 36px; height: 36px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.06); color: var(--text-muted);
+            cursor: pointer; font-size: 0.95rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s; z-index: 5;
+        }
+        .modal-close:hover { background: var(--primary); border-color: var(--primary); }
+        .modal-body h2 { font-size: clamp(1.2rem, 3vw, 1.65rem); font-weight: 800; color: var(--text-high); margin-bottom: 0.75rem; padding-right: 2.5rem; }
+        .modal-body .tags { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1.25rem; }
+        .modal-body .tag {
+            font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+            padding: 0.3rem 0.7rem; border-radius: 6px;
+            background: var(--primary-dim); color: var(--primary); border: 1px solid rgba(249,115,22,0.2);
+        }
+        .modal-body h4 {
+            font-size: 0.95rem; font-weight: 700; color: var(--text-high);
+            margin: 1.35rem 0 0.5rem; padding-left: 0.75rem;
+            border-left: 3px solid var(--cyan);
+        }
+        .modal-body p, .modal-body li { font-size: 0.875rem; line-height: 1.8; color: var(--text-base); }
+        .modal-body li { margin-left: 1rem; margin-bottom: 0.5rem; }
+        .modal-body strong { color: var(--text-high); }
+
+        /* ── 3D Tilt (desktop) ── */
+        .tilt-enabled { transform-style: preserve-3d; will-change: transform; }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .side-nav { display: none; }
+            .mesh-stage { mask-image: radial-gradient(ellipse 100% 90% at 50% 40%, black 20%, transparent 92%); -webkit-mask-image: radial-gradient(ellipse 100% 90% at 50% 40%, black 20%, transparent 92%); }
+            #meshCanvas { opacity: 0.65; }
+            .float-orb { opacity: 0.7; }
+            .span-8, .span-6, .span-4 { grid-column: span 12; }
+            .project-item { grid-template-columns: 1fr; }
+            .project-item .proj-arrow { display: none; }
+            .tilt-enabled { transform: none !important; }
+        }
         @media (max-width: 768px) {
-            :root { --screen-padding: 1.25rem; }
-
-            .spatial-section {
-                padding: 3.5rem var(--screen-padding) 2rem;
-                scroll-margin-top: 1rem;
-            }
-            .spatial-section:last-of-type {
-                padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-            }
-
-            .mobile-nav-bar { display: block; }
-
-            .hero-names h1 { font-size: 2.4rem; letter-spacing: -0.03em; }
-            .hero-names .job-title { font-size: 0.82rem; line-height: 1.4; }
-            .section-caption h2 { font-size: 1.75rem; }
-            .section-caption .slug { font-size: 0.72rem; }
-
-            .metadata-cluster { grid-template-columns: 1fr; gap: 1rem; }
-            .metadata-item span { font-size: 0.95rem; word-break: break-all; }
-
-            .hero-profile p { font-size: 0.95rem; text-align: left; line-height: 1.75; }
-            .hero-profile h3 { font-size: 0.78rem; }
-
-            .card-education { padding: 1.4rem; }
-            .edu-headline { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
-            .edu-headline h4 { font-size: 1.05rem; line-height: 1.35; }
-            .edu-headline .degree { font-size: 0.88rem; }
-            .edu-details { font-size: 0.88rem; text-align: left; }
-
-            .matrix-card { padding: 1.6rem 1.4rem; }
-            .matrix-card h3 { font-size: 1.1rem; }
-            .matrix-card p, .matrix-card li { font-size: 0.88rem; text-align: left; }
-
-            .pipeline-title-group h3 { font-size: 1.15rem; line-height: 1.35; }
-            .pipeline-title-group .terminal-prefix { font-size: 0.68rem; word-break: break-all; }
-            .pipeline-meta .position { font-size: 0.9rem; }
-            .pipeline-meta .tech-core { font-size: 0.72rem; word-break: break-all; }
-
-            .modal-container {
-                width: 96%; max-height: 90vh;
-                padding: 2rem 1.25rem 1.5rem;
-                border-radius: 20px;
-                -webkit-overflow-scrolling: touch;
-            }
-            .btn-close-modal { top: 1rem; right: 1rem; width: 36px; height: 36px; }
-            .modal-inject h2 { font-size: 1.35rem; }
-            .modal-inject h4 { font-size: 1rem; margin-top: 1.4rem; }
-            .modal-inject p, .modal-inject ul { font-size: 0.9rem; text-align: left; }
+            .mobile-nav { display: block; }
+            #meshCanvas { opacity: 0.5; }
+            .float-orb { display: none; }
+            .hero-contact { flex-direction: column; gap: 0.25rem; }
+            .hero-contact .sep { display: none; }
+            .hero-contact strong { word-break: break-all; }
+            .section:last-of-type { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
+            .edu-row { flex-direction: column; }
+            .modal { max-height: 90vh; padding: 1.5rem 1.15rem; }
         }
-
         @media (max-width: 480px) {
-            .hero-names h1 { font-size: 2rem; }
-            .user-avatar-slot { width: 100px; height: 100px; border-radius: 22px; }
-            .avatar-brand-row { gap: 1rem; }
-            .section-caption h2 { font-size: 1.5rem; }
-            .pipeline-item { padding: 1.25rem 1rem; }
-            .mobile-nav-item { font-size: 0.55rem; }
+            .hero-apple h1 { font-size: 2.125rem; }
+            .section-title { font-size: 1.5rem; }
+            .marquee-tag { font-size: 0.68rem; padding: 0.35rem 0.7rem; }
         }
-
-        /* 触摸设备：关闭 hover 位移，避免点击区域抖动 */
+        @media (prefers-reduced-motion: reduce) {
+            .float-orb { animation: none; }
+            .mesh-stage { display: none; }
+        }
         @media (hover: none) {
-            .pipeline-item:hover { padding-left: inherit; padding-right: inherit; background-color: rgba(15, 23, 42, 0.45); }
-            .user-avatar-slot:hover { transform: none; }
-            .metadata-item:hover { transform: none; }
+            .magic-card::after { opacity: 0.5; }
+            .border-beam::before { opacity: 0.5; }
         }
     </style>
 </head>
 <body>
 
-    <div class="spatial-3d-stage" id="spatial3DStage">
-        <canvas id="tactileCanvas"></canvas>
-        <div class="magic-glow-blob blob-orange"></div>
-        <div class="magic-glow-blob blob-blue"></div>
-        <div class="magic-glow-blob blob-purple"></div>
-        <div class="parallax-giant-backdrop" id="paxText1" style="top: 15vh; transform: translateZ(-250px);">CREATIVE DEVELOPER</div>
-        <div class="parallax-giant-backdrop" id="paxText2" style="top: 85vh; left: 12vw; transform: translateZ(-350px);">FULLSTACK SYSTEM</div>
+<!-- Background -->
+<div class="bg-mesh"></div>
+<div class="float-orb float-orb-a"></div>
+<div class="float-orb float-orb-b"></div>
+<div class="float-orb float-orb-c"></div>
+<div class="mesh-stage" id="meshStage">
+    <canvas id="meshCanvas"></canvas>
+</div>
+<div class="mesh-vignette"></div>
+
+<!-- Navigation -->
+<nav class="side-nav" aria-label="桌面导航">
+    <a href="#about" class="active" data-nav="about"><span class="tip">Profile</span></a>
+    <a href="#capabilities" data-nav="capabilities"><span class="tip">Stack</span></a>
+    <a href="#works" data-nav="works"><span class="tip">Projects</span></a>
+</nav>
+<nav class="mobile-nav" aria-label="移动导航">
+    <div class="mobile-nav-inner">
+        <a href="#about" class="active" data-nav="about">Profile</a>
+        <a href="#capabilities" data-nav="capabilities">Stack</a>
+        <a href="#works" data-nav="works">Projects</a>
     </div>
+</nav>
 
-    <nav class="spatial-nav">
-        <a href="#about" class="nav-node active" data-nav="about"><span class="nav-node-index">PROFILE // 个人常设</span></a>
-        <a href="#capabilities" class="nav-node" data-nav="capabilities"><span class="nav-node-index">MATRIX // 履历资质</span></a>
-        <a href="#works" class="nav-node" data-nav="works"><span class="nav-node-index">PIPELINE // 核心研行</span></a>
-    </nav>
+<main class="page">
 
-    <nav class="mobile-nav-bar" aria-label="移动端导航">
-        <div class="mobile-nav-bar-inner">
-            <a href="#about" class="mobile-nav-item active" data-nav="about">个人</a>
-            <a href="#capabilities" class="mobile-nav-item" data-nav="capabilities">资质</a>
-            <a href="#works" class="mobile-nav-item" data-nav="works">项目</a>
+    <!-- ═══ HERO · Apple-style ═══ -->
+    <section id="about" class="section">
+        <div class="hero-apple reveal">
+            <div class="hero-avatar">
+                <img src="avatar.jpg" alt="黄奕铨">
+            </div>
+            <p class="hero-eyebrow">AI-Native · Agent Engineer</p>
+            <h1>黄奕铨</h1>
+            <p class="hero-subtitle">全栈开发 · Multi-Agent 系统构建</p>
+
+            <div class="hero-contact">
+                <span>电话 <strong>19865291563</strong></span>
+                <span class="sep">|</span>
+                <span>邮箱 <strong>1789893270@qq.com</strong></span>
+                <span class="sep">|</span>
+                <span>东莞</span>
+                <span class="sep">|</span>
+                <span>2004.03</span>
+            </div>
+
+            <p class="hero-bio">
+                面向 AI Agent 时代的全栈工程开发者。深耕 Multi-Agent 编排、Prompt Chain 与 LLM 应用落地，同时具备计算机视觉与高健壮性系统交付能力。
+            </p>
         </div>
-    </nav>
 
-    <section id="about" class="spatial-section">
-        <div class="grid-hero">
-            <div class="hero-identity-wrapper">
-                <div class="avatar-brand-row">
-                    <div class="user-avatar-slot">
-                        <img src="avatar.jpg" alt="黄奕铨">
+        <!-- Marquee Skills -->
+        <div class="marquee-wrap reveal reveal-delay-1" style="margin-top: 2.5rem;">
+            <div class="marquee-track" id="marqueeTrack">
+                <span class="marquee-tag">Multi-Agent</span>
+                <span class="marquee-tag">Prompt Engineering</span>
+                <span class="marquee-tag">LLM Orchestration</span>
+                <span class="marquee-tag">RAG Pipeline</span>
+                <span class="marquee-tag">Python</span>
+                <span class="marquee-tag">Streamlit</span>
+                <span class="marquee-tag">OpenCV</span>
+                <span class="marquee-tag">Dlib</span>
+                <span class="marquee-tag">MySQL</span>
+                <span class="marquee-tag">WeChat Mini Program</span>
+                <span class="marquee-tag">CloudBase</span>
+                <span class="marquee-tag">Full-Stack</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ CAPABILITIES BENTO ═══ -->
+    <section id="capabilities" class="section">
+        <div class="section-head reveal">
+            <span class="section-slug">01 · Capability Matrix</span>
+            <h2 class="section-title">技术栈与能力矩阵</h2>
+            <p class="section-desc">AI Agent 为核心方向，Computer Vision 与 Full-Stack 为工程底座。</p>
+        </div>
+
+        <div class="bento-grid">
+            <!-- Agent 主打 -->
+            <div class="bento-item span-8 border-beam featured magic-card tilt-enabled reveal reveal-delay-1">
+                <div class="magic-card-inner">
+                    <h3><span class="icon icon-agent">🤖</span> AI Agent & LLM 工程</h3>
+                    <p>构建 Multi-Agent 协同拓扑，将复杂业务流程映射为 Prompt Chain 自动化链路。探索 Agent 冲突调度、RAG 知识增强与 DAG 异步任务控制，以工程化方式释放 LLM 生产力。</p>
+                    <div class="stack-chips">
+                        <span class="stack-chip highlight">Multi-Agent</span>
+                        <span class="stack-chip highlight">Prompt Chain</span>
+                        <span class="stack-chip highlight">LLM</span>
+                        <span class="stack-chip">RAG</span>
+                        <span class="stack-chip">Vector DB</span>
+                        <span class="stack-chip">DAG Workflow</span>
                     </div>
-                    <div class="hero-names">
-                        <h1>黄奕铨</h1>
-                        <div class="job-title">Software Engineer // Full-Stack</div>
-                    </div>
-                </div>
-                <div class="metadata-cluster">
-                    <div class="metadata-item">M_Phone <span>19865291563</span></div>
-                    <div class="metadata-item">E_Mail <span>1789893270@qq.com</span></div>
-                    <div class="metadata-item">L_Location <span>广东省东莞市</span></div>
-                    <div class="metadata-item">B_Timestamp <span>2004.03</span></div>
                 </div>
             </div>
-            <div class="hero-profile">
-                <h3>[ABOUT ME // 个人简介]</h3>
-                <p>具备流线项目深度闭环与落地部署能力的软件工程开发者。核心专长聚焦于计算机视觉（基于 OpenCV、Dlib 进行细粒度面部行为量化算法改造）与高健壮性全栈系统交付。崇尚清晰的架构规范与面向未来的敏捷迭代能力，擅长将复杂的底层数据转化为高感知度的交互应用，并具备在敏捷开发周期中强力推动全栈闭环的高效沟通意识。</p>
 
-                <div class="card-education structural-tilt">
-                    <div class="edu-headline">
+            <!-- CV -->
+            <div class="bento-item span-4 border-beam magic-card tilt-enabled reveal reveal-delay-2">
+                <div class="magic-card-inner">
+                    <h3><span class="icon icon-cv">👁</span> Computer Vision</h3>
+                    <p>OpenCV + Dlib 面部网格特征提取与行为量化模型，Streamlit 算法可视化交付。</p>
+                    <div class="stack-chips">
+                        <span class="stack-chip">OpenCV</span>
+                        <span class="stack-chip">Dlib</span>
+                        <span class="stack-chip">Streamlit</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Stack -->
+            <div class="bento-item span-4 border-beam magic-card tilt-enabled reveal">
+                <div class="magic-card-inner">
+                    <h3><span class="icon icon-stack">⚡</span> Full-Stack 交付</h3>
+                    <p>Python / Java 全链路开发，MySQL 结构化建模，微信小程序 + CloudBase Serverless 部署。</p>
+                    <div class="stack-chips">
+                        <span class="stack-chip">Python</span>
+                        <span class="stack-chip">MySQL</span>
+                        <span class="stack-chip">Mini Program</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Education -->
+            <div class="bento-item span-4 border-beam magic-card tilt-enabled reveal reveal-delay-1">
+                <div class="magic-card-inner">
+                    <h3><span class="icon icon-stack">🎓</span> 教育背景</h3>
+                    <div class="edu-row">
                         <h4>东莞理工学院城市学院</h4>
-                        <span class="degree">软件工程（本科）</span>
+                        <span class="edu-date">2022.09 – 2026.07</span>
                     </div>
-                    <span class="edu-timeline">2022.09 - 2026.07 // ACADEMIC DEPLOYMENT</span>
-                    <p class="edu-details">
-                        <strong>主修大类：</strong> 数据库系统设计、深度数据 analysis 基础、现代软件工程导论、IT project 管理规范、Python/Java高级面向对象系统构建、分布式计算机网络、电子商务全局生态等。
-                    </p>
+                    <p class="edu-degree">软件工程 · 本科</p>
+                    <p>数据库系统、软件工程、Python/Java OOP、计算机网络、数据分析等。</p>
+                </div>
+            </div>
+
+            <!-- Honors -->
+            <div class="bento-item span-4 border-beam magic-card tilt-enabled reveal reveal-delay-2">
+                <div class="magic-card-inner">
+                    <h3><span class="icon icon-honor">🏆</span> 荣誉 & 证书</h3>
+                    <ul>
+                        <li>2023 优秀大学生</li>
+                        <li>2024 优秀学生干部</li>
+                        <li>2022–2024 校三等奖学金</li>
+                        <li>CET-4 · 普通话二级乙等</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Work -->
+            <div class="bento-item span-12 border-beam magic-card tilt-enabled reveal reveal-delay-3">
+                <div class="magic-card-inner">
+                    <h3><span class="icon icon-agent">🌐</span> 工作经历</h3>
+                    <div class="edu-row">
+                        <h4>Facebook 跨境电商 · 海外社媒运营</h4>
+                        <span class="edu-date">2025.05 – 2025.06</span>
+                    </div>
+                    <p>独立主导海外社媒矩阵内容构建、粉丝沉淀与跨境商品流转全生命周期；锤炼跨域沟通与商业指标闭环推进能力。</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="capabilities" class="spatial-section">
-        <div class="section-caption">
-            <span class="slug">[01 // CAPABILITIES_MATRIX]</span>
-            <h2>履历与资质矩阵</h2>
+    <!-- ═══ PROJECTS ═══ -->
+    <section id="works" class="section">
+        <div class="section-head reveal">
+            <span class="section-slug">02 · Project Pipeline</span>
+            <h2 class="section-title">核心项目研行</h2>
+            <p class="section-desc">点击卡片查看完整工程描述与实现细节。</p>
         </div>
-        <div class="matrix-container">
-            <div class="matrix-card structural-tilt">
-                <h3>底层技术群</h3>
-                <p>深度打通 Python 全链路开发生态。熟练运用 Streamlit 高效交付可交互的中后台原型系统与算法可视化大屏；擅长结合 OpenCV 与 Dlib 深度定制图像捕捉、面部网格特征提取及高维行为逻辑量化模型；具备严谨的 MySQL 结构化建表思维、查询优化及全栈综合调试硬实力。</p>
-            </div>
-            <div class="matrix-card structural-tilt">
-                <h3>专业资质荣誉</h3>
-                <ul>
-                    <li>2023 荣誉授予“优秀大学生”称号</li>
-                    <li>2024 荣誉授予“优秀学生干部”称谓</li>
-                    <li>2022 - 2024 连续斩获“校三等奖学金”</li>
-                    <li>国家四级大学英语（CET4）资质认证</li>
-                    <li>全国普通话二级乙等证书</li>
-                </ul>
-            </div>
-            <div class="matrix-card structural-tilt">
-                <span class="tag-date">2025.05 - 2025.06</span>
-                <h3>海外网络运营</h3>
-                <p><strong>Facebook 跨境电商 / 流量中枢运营销售</strong><br>在职期间，独立主导海外社媒矩阵的内容构建、粉丝沉淀和跨境商品流转全生命周期跟进。借此锤炼出了高度敏锐的海外受众沟通习惯，以及跨多方机构高效协同、推进商业指标闭环的跨域综合素养。</p>
-            </div>
+
+        <div class="project-list">
+            <article class="project-item border-beam featured magic-card tilt-enabled reveal" onclick="launchModal('agent')">
+                <div class="magic-card-inner">
+                    <span class="proj-index">PROJECT_01 · AGENT_SYSTEM</span>
+                    <h3>企业级多智能体协同流程自动化系统<span class="featured-label">FLAGSHIP</span></h3>
+                    <p class="proj-role">全栈独立架构 · AI Agent 方向</p>
+                    <p class="proj-brief">Multi-Agent 拓扑 + Prompt Chain，将人工决策流程拆解为 LLM 驱动的自动化工作流。</p>
+                </div>
+                <div class="proj-arrow">→</div>
+            </article>
+
+            <article class="project-item border-beam magic-card tilt-enabled reveal reveal-delay-1" onclick="launchModal('cv')">
+                <div class="magic-card-inner">
+                    <span class="proj-index">PROJECT_02 · COMPUTER_VISION</span>
+                    <h3>基于 Python 的课堂专注度辅助分析系统</h3>
+                    <p class="proj-role">算法研发 & 全栈架构负责人</p>
+                    <p class="proj-brief">多路视频捕获、行为量化、RBAC 权限与 MySQL 数据底座的教务分析中后台。</p>
+                </div>
+                <div class="proj-arrow">→</div>
+            </article>
+
+            <article class="project-item border-beam magic-card tilt-enabled reveal reveal-delay-2" onclick="launchModal('lodog')">
+                <div class="magic-card-inner">
+                    <span class="proj-index">PROJECT_03 · MINI_PROGRAM</span>
+                    <h3>「LoDog」宠物社区服务交互小程序</h3>
+                    <p class="proj-role">全栈开发主导</p>
+                    <p class="proj-brief">Serverless 云架构原生小程序，覆盖社区活动与线下核销场景。</p>
+                </div>
+                <div class="proj-arrow">→</div>
+            </article>
         </div>
     </section>
 
-    <section id="works" class="spatial-section">
-        <div class="section-caption">
-            <span class="slug">[02 // DEPLOYED_PROJECT_PIPELINE]</span>
-            <h2>核心项目研行录</h2>
-        </div>
-        <div class="stream-pipeline">
-            <div class="pipeline-item structural-tilt" onclick="launchModal('cv')">
-                <div class="pipeline-title-group">
-                    <span class="terminal-prefix">pipeline_task_01 // COMPUTER_VISION</span>
-                    <h3>基于Python的课堂专注度辅助分析系统</h3>
-                </div>
-                <div class="pipeline-meta">
-                    <div class="position">算法研发与全栈架构负责人</div>
-                    <span class="tech-core">Python / Streamlit / OpenCV / Dlib / MySQL</span>
-                </div>
-            </div>
-            <div class="pipeline-item structural-tilt" onclick="launchModal('agent')">
-                <div class="pipeline-title-group">
-                    <span class="terminal-prefix">pipeline_task_02 // COGNITIVE_INTELLIGENCE</span>
-                    <h3>企业级多智能体协同流程自动化系统</h3>
-                </div>
-                <div class="pipeline-meta">
-                    <div class="position">全栈独立架构师</div>
-                    <span class="tech-core">AI Agent / Prompt Chain / LLM Ecosystem</span>
-                </div>
-            </div>
-            <div class="pipeline-item structural-tilt" onclick="launchModal('lodog')">
-                <div class="pipeline-title-group">
-                    <span class="terminal-prefix">pipeline_task_03 // ECOSYSTEM_APPLICATION</span>
-                    <h3>“LoDog” 宠物社区服务交互小程序</h3>
-                </div>
-                <div class="pipeline-meta">
-                    <div class="position">全栈开发主导人</div>
-                    <span class="tech-core">WeChat Mini Program / CloudBase Cloud</span>
-                </div>
-            </div>
-        </div>
-    </section>
+</main>
 
-    <div class="overlay-mask" id="globalOverlay" onclick="interceptClose(event)">
-        <div class="modal-container">
-            <button class="btn-close-modal" onclick="interceptClose(event)">✕</button>
-            <div id="modalCoreContent" class="modal-inject"></div>
-        </div>
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+    <div class="modal border-beam magic-card" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal(event, true)" aria-label="关闭">✕</button>
+        <div id="modalContent" class="modal-body magic-card-inner"></div>
     </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            initTactileCanvasEngine();
-            setup3DStageInteractions();
-            setupCard3DTiltEffects();
-            setupKeyboardClosing();
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    initMeshBackground();
+    duplicateMarquee();
+    initSpotlight();
+    initTilt();
+    initReveal();
+    initNavSpy();
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal(null, true);
+    });
+});
+
+/* 3D 凹陷弹簧网格 · 动态背景 */
+function initMeshBackground() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const canvas = document.getElementById('meshCanvas');
+    const stage = document.getElementById('meshStage');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let w, h, cols, rows, pts = [];
+    const isMobile = () => window.innerWidth <= 768;
+    let gap = isMobile() ? 56 : 44;
+    const ptr = { x: -9999, y: -9999, tx: -9999, ty: -9999 };
+    let t = 0;
+
+    const build = () => {
+        gap = isMobile() ? 56 : 44;
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+        cols = Math.ceil(w / gap) + 2;
+        rows = Math.ceil(h / gap) + 2;
+        pts = [];
+        for (let c = 0; c < cols; c++) {
+            pts[c] = [];
+            for (let r = 0; r < rows; r++) {
+                const ox = (c - 0.5) * gap, oy = (r - 0.5) * gap;
+                pts[c][r] = { x: ox, y: oy, ox, oy, vx: 0, vy: 0 };
+            }
+        }
+    };
+    build();
+    window.addEventListener('resize', build);
+
+    const setPointer = (x, y) => { ptr.tx = x; ptr.ty = y; };
+    window.addEventListener('mousemove', e => setPointer(e.clientX, e.clientY), { passive: true });
+    window.addEventListener('mouseleave', () => setPointer(-9999, -9999));
+    window.addEventListener('touchmove', e => {
+        if (e.touches[0]) setPointer(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    window.addEventListener('touchend', () => setPointer(-9999, -9999));
+
+    /* 舞台轻微 3D 视差 */
+    let mx = 0, my = 0, ix = 0, iy = 0;
+    window.addEventListener('mousemove', e => {
+        mx = (e.clientX / window.innerWidth - 0.5) * 2;
+        my = (e.clientY / window.innerHeight - 0.5) * 2;
+    }, { passive: true });
+
+    const loop = () => {
+        t += 0.012;
+        ctx.clearRect(0, 0, w, h);
+
+        ptr.x += (ptr.tx - ptr.x) * 0.11;
+        ptr.y += (ptr.ty - ptr.y) * 0.11;
+
+        const impactR = isMobile() ? 130 : 170;
+        const spring = 0.065, damp = 0.79;
+        const waveAmp = isMobile() ? 2.2 : 3.2;
+
+        for (let c = 0; c < cols; c++) {
+            for (let r = 0; r < rows; r++) {
+                const p = pts[c][r];
+                /* 环境呼吸波 — 无交互时也持续动态 */
+                const wave = Math.sin(p.ox * 0.012 + p.oy * 0.01 + t) * waveAmp
+                           + Math.cos(p.ox * 0.008 - t * 0.7) * (waveAmp * 0.6);
+                let tx = p.ox + wave * 0.3;
+                let ty = p.oy + Math.cos(p.oy * 0.011 + t * 0.9) * waveAmp * 0.25;
+
+                const dx = p.ox - ptr.x, dy = p.oy - ptr.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                if (dist < impactR) {
+                    const force = (impactR - dist) / impactR;
+                    const push = force * (isMobile() ? 28 : 38);
+                    tx += (dx / dist) * push;
+                    ty += (dy / dist) * push;
+                }
+
+                p.vx = (p.vx + (tx - p.x) * spring) * damp;
+                p.vy = (p.vy + (ty - p.y) * spring) * damp;
+                p.x += p.vx;
+                p.y += p.vy;
+            }
+        }
+
+        /* 网格线 — 浅色主题 */
+        for (let c = 0; c < cols; c++) {
+            for (let r = 0; r < rows; r++) {
+                const p = pts[c][r];
+                const dd = Math.hypot(p.x - ptr.x, p.y - ptr.y);
+                const near = dd < 140;
+                const alpha = near ? 0.08 + (1 - dd / 140) * 0.1 : 0.045;
+
+                ctx.strokeStyle = near
+                    ? `rgba(232, 98, 10, ${alpha})`
+                    : `rgba(100, 116, 139, ${alpha})`;
+                ctx.lineWidth = near ? 1.1 : 0.75;
+
+                if (c < cols - 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(pts[c + 1][r].x, pts[c + 1][r].y);
+                    ctx.stroke();
+                }
+                if (r < rows - 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(pts[c][r + 1].x, pts[c][r + 1].y);
+                    ctx.stroke();
+                }
+
+                if (dd < 110) {
+                    const b = (110 - dd) / 110;
+                    ctx.fillStyle = `rgba(232, 98, 10, ${b * 0.35})`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 1.2 + b * 1.2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        /* 舞台 3D 倾斜 */
+        ix += (mx - ix) * 0.04;
+        iy += (my - iy) * 0.04;
+        if (stage && !isMobile()) {
+            stage.style.transform = `perspective(1800px) rotateX(${-iy * 3}deg) rotateY(${ix * 3}deg)`;
+        }
+
+        requestAnimationFrame(loop);
+    };
+    loop();
+}
+
+/* Marquee duplicate for seamless loop */
+function duplicateMarquee() {
+    const track = document.getElementById('marqueeTrack');
+    if (!track) return;
+    track.innerHTML += track.innerHTML;
+}
+
+/* Magic Card spotlight */
+function initSpotlight() {
+    document.querySelectorAll('.magic-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const r = card.getBoundingClientRect();
+            card.style.setProperty('--spot-x', `${e.clientX - r.left}px`);
+            card.style.setProperty('--spot-y', `${e.clientY - r.top}px`);
+            card.style.setProperty('--beam-angle', `${(e.clientX - r.left) / r.width * 360}deg`);
         });
+    });
+}
 
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 🔮 Canvas 物理阻尼弹簧凹陷网格引擎
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function initTactileCanvasEngine() {
-            const canvas = document.getElementById('tactileCanvas');
-            if (!canvas || window.innerWidth <= 1200) return;
-            const ctx = canvas.getContext('2d');
+/* 3D tilt */
+function initTilt() {
+    if (window.innerWidth <= 1024) return;
+    document.querySelectorAll('.tilt-enabled').forEach(el => {
+        el.addEventListener('mousemove', e => {
+            const r = el.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width - 0.5;
+            const y = (e.clientY - r.top) / r.height - 0.5;
+            el.style.transform = `perspective(800px) rotateX(${-y*6}deg) rotateY(${x*6}deg) translateZ(8px)`;
+        });
+        el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+    });
+}
 
-            let width = canvas.width = window.innerWidth;
-            let height = canvas.height = window.innerHeight;
+/* Scroll reveal */
+function initReveal() {
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
 
-            let points = [];
-            const spacing = 50;
-            let cols = Math.ceil(width / spacing) + 2;
-            let rows = Math.ceil(height / spacing) + 2;
-
-            const pointer = { x: -2000, y: -2000, activeX: -2000, activeY: -2000 };
-
-            window.addEventListener('mousemove', (e) => {
-                pointer.activeX = e.clientX;
-                pointer.activeY = e.clientY;
-            }, { passive: true });
-
-            window.addEventListener('mouseleave', () => { pointer.activeX = -2000; pointer.activeY = -2000; });
-
-            function buildMesh() {
-                points = [];
-                width = canvas.width = window.innerWidth;
-                height = canvas.height = window.innerHeight;
-                cols = Math.ceil(width / spacing) + 2;
-                rows = Math.ceil(height / spacing) + 2;
-
-                for (let c = 0; c < cols; c++) {
-                    points[c] = [];
-                    for (let r = 0; r < rows; r++) {
-                        const originalX = (c - 0.5) * spacing;
-                        const originalY = (r - 0.5) * spacing;
-                        points[c][r] = { x: originalX, y: originalY, ox: originalX, oy: originalY, vx: 0, vy: 0 };
-                    }
-                }
+/* Nav spy */
+function initNavSpy() {
+    const links = document.querySelectorAll('[data-nav]');
+    const mobile = window.innerWidth <= 768;
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                const id = e.target.id;
+                links.forEach(l => l.classList.toggle('active', l.dataset.nav === id));
             }
-            buildMesh();
-            window.addEventListener('resize', buildMesh);
+        });
+    }, { rootMargin: mobile ? '-8% 0px -55% 0px' : '-25% 0px -60% 0px', threshold: 0 });
+    document.querySelectorAll('section[id]').forEach(s => obs.observe(s));
+}
 
-            function updateAndRenderGrid() {
-                ctx.clearRect(0, 0, width, height);
+/* Modal */
+const MODAL_DATA = {
+    agent: `
+        <h2>企业级多智能体协同流程自动化系统</h2>
+        <div class="tags"><span class="tag">AI Agent</span><span class="tag">Prompt Chain</span><span class="tag">LLM</span><span class="tag">Multi-Agent</span></div>
+        <h4>项目描述</h4>
+        <p>探索 LLM 在企业内部中枢的场景落地。通过 Multi-Agent 拓扑架构，将依赖人工决策的繁琐业务流程拆解并映射为自动化 Prompt Chain，全面释放传统办公流程的生产力。</p>
+        <h4>核心工程方向</h4>
+        <ul>
+            <li><strong>多智能体冲突调度网关：</strong>抽象 Agent 并发任务冲突与优先级仲裁控制器，确保深层嵌套条件下的执行强一致性。</li>
+            <li><strong>企业知识库 RAG 链条：</strong>集成向量数据库与私有知识切片，构建上下文感知 + 安全围栏的提示词管线。</li>
+            <li><strong>异步 DAG 状态事务控制：</strong>高鲁棒异步任务状态机，支持失败超时回滚与人工介入熔断兜底。</li>
+        </ul>`,
+    cv: `
+        <h2>基于 Python 的课堂专注度辅助分析系统</h2>
+        <div class="tags"><span class="tag">Python</span><span class="tag">Streamlit</span><span class="tag">OpenCV</span><span class="tag">Dlib</span><span class="tag">MySQL</span></div>
+        <h4>项目描述</h4>
+        <p>集多路视频并发捕获、细粒度行为特征量化、多维状态看板、离线报告追溯于一体的教务分析中后台，为课堂专注度评测提供数据闭环支撑。</p>
+        <h4>核心实现</h4>
+        <ul>
+            <li><strong>MySQL 数据底座：</strong>用户审计、视频资产映射、异步任务状态机及历史快照，合理索引支撑高频检索。</li>
+            <li><strong>RBAC 权限控制：</strong>教师 / 教务 / 管理员三层鉴权，Session 拦截、账户冻结与审计溯源。</li>
+            <li><strong>视觉管线参数化：</strong>抽帧步长、最大解析帧数等关键指标弹性调优，平衡负载与精度。</li>
+            <li><strong>流媒体容错：</strong>多线程流捕获 + 强制降级转储 CSV，保障数据完整度。</li>
+            <li><strong>可视化看板：</strong>多条件交叉过滤、趋势曲线比对、统计分析与多格式导出。</li>
+        </ul>`,
+    lodog: `
+        <h2>「LoDog」宠物社区服务交互小程序</h2>
+        <div class="tags"><span class="tag">WeChat Mini Program</span><span class="tag">CloudBase</span><span class="tag">Serverless</span></div>
+        <h4>项目描述</h4>
+        <p>针对宠物主线下社交与核销痛点，主导开发 Serverless 原生微信小程序，降低运维成本，护航敏捷迭代。</p>
+        <h4>核心实现</h4>
+        <ul>
+            <li><strong>云数据库设计：</strong>宠物主关系主表、活动快照、核销集合及关联索引，应对高并发。</li>
+            <li><strong>云函数事务核销：</strong>CloudBase 原子函数规避重复核销与脏读。</li>
+        </ul>`
+};
 
-                pointer.x += (pointer.activeX - pointer.x) * 0.12;
-                pointer.y += (pointer.activeY - pointer.y) * 0.12;
+const overlay = document.getElementById('overlay');
+const modalContent = document.getElementById('modalContent');
 
-                const maxImpactRadius = 180;
-                const springTension = 0.07;
-                const dampening = 0.78;
-
-                for (let c = 0; c < cols; c++) {
-                    for (let r = 0; r < rows; r++) {
-                        const p = points[c][r];
-                        const dx = p.ox - pointer.x;
-                        const dy = p.oy - pointer.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-
-                        let targetX = p.ox;
-                        let targetY = p.oy;
-
-                        if (distance < maxImpactRadius) {
-                            const force = (maxImpactRadius - distance) / maxImpactRadius;
-                            const dipPush = force * 40;
-                            targetX = p.ox + (dx / (distance || 1)) * dipPush;
-                            targetY = p.oy + (dy / (distance || 1)) * dipPush;
-                        }
-
-                        const ax = (targetX - p.x) * springTension;
-                        const ay = (targetY - p.y) * springTension;
-
-                        p.vx = (p.vx + ax) * dampening;
-                        p.vy = (p.vy + ay) * dampening;
-
-                        p.x += p.vx;
-                        p.y += p.vy;
-                    }
-                }
-
-                ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
-                ctx.lineWidth = 1;
-
-                for (let c = 0; c < cols; c++) {
-                    for (let r = 0; r < rows; r++) {
-                        if (c < cols - 1) {
-                            ctx.beginPath(); ctx.moveTo(points[c][r].x, points[c][r].y);
-                            ctx.lineTo(points[c + 1][r].x, points[c + 1][r].y); ctx.stroke();
-                        }
-                        if (r < rows - 1) {
-                            ctx.beginPath(); ctx.moveTo(points[c][r].x, points[c][r].y);
-                            ctx.lineTo(points[c][r + 1].x, points[c][r + 1].y); ctx.stroke();
-                        }
-
-                        const p = points[c][r];
-                        const dx = p.x - pointer.x; const dy = p.y - pointer.y;
-                        const curDist = Math.sqrt(dx * dx + dy * dy);
-
-                        if (curDist < 120) {
-                            const brightness = (120 - curDist) / 120;
-                            ctx.fillStyle = `rgba(249, 115, 22, ${brightness * 0.45})`;
-                            ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
-                        }
-                    }
-                }
-                requestAnimationFrame(updateAndRenderGrid);
-            }
-            requestAnimationFrame(updateAndRenderGrid);
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 🌌 全局 3D 舞台旋转与视差流动
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function setup3DStageInteractions() {
-            const spatial3DStage = document.getElementById('spatial3DStage');
-            const pax1 = document.getElementById('paxText1');
-            const pax2 = document.getElementById('paxText2');
-
-            const spySections = document.querySelectorAll('.spatial-section');
-            const navLinks = document.querySelectorAll('[data-nav]');
-
-            let mouseX = 0, mouseY = 0;
-            let interpX = 0, interpY = 0;
-            const frictionCoefficient = 0.05;
-
-            window.addEventListener('mousemove', (e) => {
-                mouseX = (e.clientX / window.innerWidth) - 0.5;
-                mouseY = (e.clientY / window.innerHeight) - 0.5;
-            }, { passive: true });
-
-            function render3DLoop() {
-                interpX += (mouseX - interpX) * frictionCoefficient;
-                interpY += (mouseY - interpY) * frictionCoefficient;
-
-                const rotateX = -interpY * 9;
-                const rotateY = interpX * 9;
-
-                if (spatial3DStage && window.innerWidth > 1200) {
-                    spatial3DStage.style.transform = `scale(1.06) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-                }
-
-                const currentScroll = window.scrollY;
-                if (pax1) pax1.style.transform = `translateZ(-150px) translate3d(${-currentScroll * 0.06}px, 0, 0)`;
-                if (pax2) pax2.style.transform = `translateZ(-250px) translate3d(${currentScroll * 0.04}px, 0, 0)`;
-
-                requestAnimationFrame(render3DLoop);
-            }
-            requestAnimationFrame(render3DLoop);
-
-            const isMobile = window.innerWidth <= 768;
-            const observerOptions = {
-                root: null,
-                rootMargin: isMobile ? '-10% 0px -55% 0px' : '-30% 0px -40% 0px',
-                threshold: 0
-            };
-            const sectionSpyObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const activeId = entry.target.getAttribute('id');
-                        navLinks.forEach(link => {
-                            link.classList.remove('active');
-                            if (link.getAttribute('data-nav') === activeId) link.classList.add('active');
-                        });
-                    }
-                });
-            }, observerOptions);
-            spySections.forEach(section => sectionSpyObserver.observe(section));
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 🔮 ✨ 细节打磨：卡片局部 3D 悬浮倾斜 + 全息高光联动
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function setupCard3DTiltEffects() {
-            if (window.innerWidth <= 1200) return;
-            const cards = document.querySelectorAll('.structural-tilt');
-
-            cards.forEach(card => {
-                card.addEventListener('mousemove', (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-
-                    const rotateX = ((centerY - y) / centerY) * 7;
-                    const rotateY = ((x - centerX) / centerX) * 7;
-
-                    // 🌟 注入全息反光坐标变量驱动 CSS Background
-                    card.style.setProperty('--glare-x', `${x}px`);
-                    card.style.setProperty('--glare-y', `${y}px`);
-
-                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(12px)`;
-                    card.style.borderColor = 'rgba(249, 115, 22, 0.4)';
-                    card.style.boxShadow = '0 30px 50px -15px rgba(0, 0, 0, 0.7), 0 0 25px -5px rgba(249, 115, 22, 0.15)';
-                });
-
-                card.addEventListener('mouseleave', () => {
-                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)`;
-                    card.style.borderColor = ''; card.style.boxShadow = '';
-                });
-            });
-        }
-
-        function setupKeyboardClosing() {
-            window.addEventListener('keydown', (e) => {
-                const mask = document.getElementById('globalOverlay');
-                if (e.key === 'Escape' && mask && mask.classList.contains('active')) {
-                    mask.classList.remove('active'); document.body.style.overflow = '';
-                }
-            });
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 🏁 文本库打磨：学术级/工业级高能描述对齐
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        const dataRepository = {
-            'cv': `
-                <h2>基于Python的课堂专注度辅助分析系统</h2>
-                <div class="badge-tags">
-                    <span class="stack-tag">Python</span>
-                    <span class="stack-tag">Streamlit</span>
-                    <span class="stack-tag">OpenCV</span>
-                    <span class="stack-tag">Dlib</span>
-                    <span class="stack-tag">MySQL</span>
-                </div>
-                <h4>项目描述</h4>
-                <p>面向数字化课堂形态，自主设计并交付了一套集“多路视频并发流捕获、细粒度行为特征量化、多维状态看板协同、离线教务报告追溯”于一体的高能教务分析中后台。通过对底层多模态视觉数据的实时提纯，计算非接触式行为指标，为教学质量评测、课堂专注度演变趋势提供高置信度的数据闭环支撑。</p>
-                <h4>核心工程攻关与规范实现</h4>
-                <ul>
-                    <li><strong>关系型数据底座架构：</strong> 基于 <strong>MySQL</strong> 设计高健壮的数据表群，严谨规约用户审计表（User）、数字化视频资产关系映射表、异步流水任务状态机及历史快照报告。建立合理的索引结构，全面支撑系统级海量行为高频检索。</li>
-                    <li><strong>精细化 RBAC 级权限访问控制：</strong> 深度闭环了教师、教务管理系统、系统网关管理员三层角色的鉴权网络。内聚封装了高安全的账户注册流、动态 Session 拦截器、管理员一键账户冻结、全链路高敏感操作的审计溯源日志。</li>
-                    <li><strong>计算管线参数化改造与能效调节：</strong> 抽象并解耦核心视觉解析管线，支持教务端对“抽帧步长（视频压缩率）”、“单任务最大解析上限帧数”等关键底盘指标进行弹性动态调优，从而在硬件负载与解析精度间取得完美平衡。</li>
-                    <li><strong>高容错流媒体多线程转储优化：</strong> 规约流捕获多线程控制逻辑，大幅抑制流媒体死锁。针对非正常中断或手动强拆任务场景，设计了优雅的“强制状态降级与瞬时离线转储”防丢机制，自动将内存轨迹固化为 CSV，保障数据完整度。</li>
-                    <li><strong>全域交叉多维可视化看板：</strong> 运用流式渲染框架搭建多模态数据看板。完美支持多条件动态交叉过滤（如教师维度、时间轴范围等）、多班级专注度趋势曲线重叠比对、宏观均值/离散度离群点统计以及多格式报告的一键导出。</li>
-                </ul>
-            `,
-            'agent': `
-                <h2>企业级多智能体协同流程自动化系统</h2>
-                <div class="badge-tags">
-                    <span class="stack-tag">AI Agent</span>
-                    <span class="stack-tag">Prompt Chain</span>
-                    <span class="stack-tag">LLM Ecosystem</span>
-                </div>
-                <h4>项目描述</h4>
-                <p>探索大语言模型（LLM）生态在企业级内部中枢的场景落地。通过构建多智能体（Multi-Agent）拓扑架构，将高度复杂的、依赖人工决策的繁琐业务流程，拆解并映射为确定的自动化提示词链条（Prompt Chain），全面释放传统办公流程的生产力壁垒。</p>
-                <h4>高阶演进航向预留</h4>
-                <ul>
-                    <li><strong>多智能体冲突调度网关：</strong> 拟抽象多 Agent 并发任务冲突与优先级仲裁控制器，确保复杂任务在深层嵌套条件下的执行强一致性。</li>
-                    <li><strong>企业知识库增强型 RAG 链条：</strong> 规划集成向量数据库与私有知识切片系统，构建具备上下文强相关感知、前置安全围栏过滤的提示词管线。</li>
-                    <li><strong>异步有向无环图（DAG）状态事务控制：</strong> 建立高鲁棒性的异步任务状态机模型，提供任务失败超时自动回滚、人工介入熔断兜底等工程级控制底座。</li>
-                </ul>
-            `,
-            'lodog': `
-                <h2>“LoDog” 宠物社区服务交互小程序</h2>
-                <div class="badge-tags">
-                    <span class="stack-tag">WeChat Mini Program</span>
-                    <span class="stack-tag">CloudBase Serverless</span>
-                </div>
-                <h4>项目描述</h4>
-                <p>针对城市宠物主线下社交组织碎裂、物理验证核销繁琐等痛点，主导开发了一款高韧性、低延迟的原生微信小程序。全量拥抱 Serverless 弹性云架构，极大地消减了实体服务器的运维边际成本，全面护航敏捷迭代。”</p>
-                <h4>高阶演进航向预留</h4>
-                <ul>
-                    <li><strong>云数据库高并发集合（Collections）设计：</strong> 精细化定义宠物主关系主表、线下活动快照、分布式核销集合，规约关联索引以对抗密集请求下的并发瓶颈。</li>
-                    <li><strong>Serverless 云函数强事务核销控制：</strong> 依托腾讯云 CloudBase 编写具有事务保护的云端原子函数（Cloud Functions），在工程层面规避多点重复核销引起的脏读与死锁死循环。</li>
-                </ul>
-            `
-        };
-
-        const mask = document.getElementById('globalOverlay');
-        const injectContainer = document.getElementById('modalCoreContent');
-
-        function launchModal(id) {
-            if(!injectContainer || !mask) return;
-            injectContainer.innerHTML = dataRepository[id] || '<h2>Data synchronization in progress...</h2>';
-            mask.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function interceptClose(e) {
-            if(!mask) return;
-            if (e.target === mask || e.target.classList.contains('btn-close-modal')) {
-                mask.classList.remove('active'); document.body.style.overflow = '';
-            }
-        }
-    </script>
+function launchModal(id) {
+    modalContent.innerHTML = MODAL_DATA[id] || '<h2>Loading…</h2>';
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeModal(e, force) {
+    if (force || e?.target === overlay || e?.target?.classList?.contains('modal-close')) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+</script>
 </body>
 </html>

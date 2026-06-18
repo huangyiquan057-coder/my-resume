@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>黄奕铨 | MAGIC UI 级全栈视觉交互系统</title>
+
+    <style>
+        :root {
+            /* 🌌 赛博高奢暗黑科技色卡 */
+            --bg-master: #090d16;       /* 深邃极夜蓝底色 */
+            --bg-card-glass: rgba(15, 23, 42, 0.65); /* 浓郁黑玻璃 */
+            --border-glass: rgba(249, 115, 22, 0.25);  /* 暖橙微光边框 */
+
+            /* 极光霓虹中心 */
+            --color-primary: #f97316;   /* 脉冲能量橙 */
+            --color-secondary: #38bdf8; /* 全息晴空蓝 */
+            --color-purple: #a855f7;    /* 极光深紫 */
+            --color-success: #34d399;   /* 荧光森绿 */
+
+            /* 暗色高对比度文本层 */
+            --text-high: #f8fafc;       /* 纯白高亮 */
+            --text-base: #cbd5e1;       /* 银灰主字 */
+            --text-muted: #64748b;      /* 科技幽灵灰 */
+
+            --screen-padding: 8vw;
+            --font-mono: "Fira Code", Menlo, Monaco, Consolas, monospace;
+
+            /* 暗夜高维空间发光群 */
+            --shadow-spatial-sm: 0 4px 20px rgba(0, 0, 0, 0.5);
+            --shadow-spatial-md: 0 20px 40px -12px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255,255,255,0.1);
+            --shadow-spatial-lg: 0 0 50px -10px rgba(249, 115, 22, 0.25), inset 0 1px 2px rgba(255,255,255,0.15);
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html, body {
+            background-color: var(--bg-master);
+            color: var(--text-base);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+            letter-spacing: -0.01em;
+            scroll-behavior: smooth;
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           🌌 物理画布总线：独立 3D 渲染上下文
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .spatial-3d-stage {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 1; pointer-events: none;
+            perspective: 2500px;
+            transform-style: preserve-3d;
+            will-change: transform;
+            overflow: hidden;
+        }
+
+        #tactileCanvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        .magic-glow-blob {
+            position: absolute; border-radius: 50%; filter: blur(110px); opacity: 0.45;
+            transform-style: preserve-3d;
+        }
+        .blob-orange {
+            top: -10%; right: 5%; width: 45vw; height: 45vw;
+            background: radial-gradient(circle, rgba(249,115,22,0.35) 0%, transparent 70%);
+            transform: translateZ(-100px);
+        }
+        .blob-blue {
+            bottom: -10%; left: -5%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(56,189,248,0.3) 0%, transparent 70%);
+            transform: translateZ(-200px);
+        }
+        .blob-purple {
+            top: 40%; left: 30%; width: 35vw; height: 35vw;
+            background: radial-gradient(circle, rgba(168,85,247,0.25) 0%, transparent 70%);
+            transform: translateZ(-150px);
+        }
+
+        .parallax-giant-backdrop {
+            position: absolute; left: 4vw; font-size: 13vw; font-weight: 900;
+            color: rgba(255, 255, 255, 0.015); font-family: var(--font-mono);
+            white-space: nowrap; user-select: none; z-index: 2;
+            transform-style: preserve-3d;
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           📦 内容排版上层核心
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .spatial-section {
+            position: relative;
+            z-index: 10;
+            min-height: auto;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 8rem var(--screen-padding) 6rem;
+            max-width: 1450px; margin: 0 auto;
+        }
+
+        /* 🧭 侧边导航细节打磨 */
+        .spatial-nav {
+            position: fixed; right: 4vw; top: 50%; transform: translateY(-50%);
+            z-index: 90; display: flex; flex-direction: column; gap: 2.2rem;
+        }
+        .nav-node {
+            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; text-decoration: none;
+        }
+        .nav-node::before {
+            content: ''; width: 8px; height: 8px; border-radius: 50%; background: #334155;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform;
+        }
+        /* ✨ 细节打磨：为激活态导航节点增加呼吸脉冲光圈 */
+        .nav-node.active::after {
+            content: ''; position: absolute; width: 20px; height: 20px; border: 1px solid var(--color-primary);
+            border-radius: 50%; animation: navPulse 2s infinite ease-out; pointer-events: none;
+        }
+        @keyframes navPulse {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+        .nav-node-index {
+            position: absolute; right: 50px; font-family: var(--font-mono); font-size: 0.75rem;
+            color: var(--color-primary); font-weight: 700; opacity: 0; transform: translate3d(10px, 0, 0);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap;
+        }
+        .nav-node:hover .nav-node-index { opacity: 1; transform: translate3d(0,0,0); }
+        .nav-node:hover::before, .nav-node.active::before { background: var(--color-primary); transform: scale(1.6); box-shadow: 0 0 12px var(--color-primary); }
+
+        /* --- Section 01: 首屏 --- */
+        .grid-hero { display: grid; grid-template-columns: 1.3fr 1.7fr; gap: 5vw; align-items: center; }
+        .hero-identity-wrapper { display: flex; flex-direction: column; gap: 2.2rem; }
+
+        .avatar-brand-row { display: flex; align-items: center; gap: 2.5rem; }
+        .user-avatar-slot {
+            width: 160px; height: 160px; max-width: 25vw; max-height: 25vw;
+            border-radius: 38px; background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            overflow: hidden; flex-shrink: 0; position: relative;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .user-avatar-slot:hover {
+            transform: scale(1.04) rotate(1deg); border-color: var(--color-primary);
+            box-shadow: 0 0 30px rgba(249, 115, 22, 0.3);
+        }
+        .user-avatar-slot img { width: 100%; height: 100%; object-fit: cover; }
+
+        .hero-names h1 { font-size: 4.5rem; font-weight: 900; line-height: 1; color: var(--text-high); letter-spacing: -0.04em; margin-bottom: 0.6rem; }
+        .hero-names .job-title { font-family: var(--font-mono); font-size: 1rem; color: var(--color-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .metadata-cluster { border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 1.8rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem; }
+        .metadata-item { font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; transition: all 0.3s ease; }
+        .metadata-item span { display: block; font-size: 1.05rem; color: var(--text-high); font-weight: 600; font-family: -apple-system, sans-serif; margin-top: 0.2rem; }
+        .metadata-item:hover { transform: translate3d(4px, 0, 0); }
+        .metadata-item:hover span { color: var(--color-primary); }
+
+        .hero-profile { padding-left: 2.2rem; border-left: 3px solid var(--color-primary); }
+        .hero-profile h3 { font-size: 0.85rem; font-family: var(--font-mono); color: var(--color-primary); margin-bottom: 0.8rem; letter-spacing: 0.1rem;}
+        .hero-profile p { font-size: 1.05rem; color: var(--text-base); line-height: 1.8; text-align: justify; margin-bottom: 1.8rem; }
+
+        /* 🔮 ✨ 细节打磨：3D 触感磨砂卡片（注入全息高光反光机制） */
+        .structural-tilt {
+            background-color: var(--bg-card-glass); border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            box-shadow: var(--shadow-spatial-md); transform-style: preserve-3d; backface-visibility: hidden;
+            position: relative; overflow: hidden;
+            transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+            will-change: transform;
+        }
+        /* 全息高光伪元素层 */
+        .structural-tilt::before {
+            content: ''; position: absolute; inset: 0; z-index: 5; pointer-events: none;
+            background: radial-gradient(circle 280px at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255, 255, 255, 0.07), transparent 80%);
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        .structural-tilt:hover::before { opacity: 1; }
+
+        .card-education { padding: 2rem; }
+        .edu-headline { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem; transform: translateZ(20px); }
+        .edu-headline h4 { font-size: 1.25rem; font-weight: 900; color: var(--text-high); }
+        .edu-headline .degree { color: var(--color-secondary); font-weight: 700; font-size: 0.95rem; }
+        .edu-timeline { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.8rem; display: block; transform: translateZ(15px); }
+        .edu-details { font-size: 0.95rem; color: var(--text-base); line-height: 1.7; transform: translateZ(10px); }
+
+        /* --- Section 02: 资质矩阵 --- */
+        .section-caption { margin-bottom: 2.5rem; }
+        .section-caption .slug { font-family: var(--font-mono); color: var(--color-primary); font-size: 0.85rem; font-weight: 700; display: block; margin-bottom: 0.3rem;}
+        .section-caption h2 { font-size: 3rem; font-weight: 900; color: var(--text-high); letter-spacing: -0.03em; }
+
+        .matrix-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8rem; }
+
+        .matrix-card { padding: 2.5rem 2rem; }
+        .matrix-card h3 { font-size: 1.3rem; font-weight: 800; color: var(--text-high); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; transform: translateZ(25px); }
+        .matrix-card h3::before {
+            content: ''; display: inline-block; width: 8px; height: 8px;
+            background: var(--color-primary); transform: rotate(45deg); box-shadow: 0 0 8px var(--color-primary);
+        }
+        .matrix-card p { font-size: 0.95rem; color: var(--text-base); line-height: 1.75; text-align: justify; transform: translateZ(15px); }
+        .matrix-card ul { list-style: none; transform: translateZ(15px); }
+        .matrix-card li { margin-bottom: 0.6rem; color: var(--text-base); font-size: 0.95rem; display: flex; align-items: center; gap: 0.6rem; }
+        .matrix-card li::before {
+            content: ''; display: inline-block; width: 5px; height: 10px;
+            border-bottom: 2px solid var(--color-success); border-right: 2px solid var(--color-success);
+            transform: rotate(45deg); margin-bottom: 2px; flex-shrink: 0;
+        }
+        .tag-date { display: inline-block; padding: 0.3rem 0.8rem; background: rgba(249, 115, 22, 0.15); color: var(--color-primary); font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; border-radius: 8px; margin-bottom: 1rem; transform: translateZ(20px); }
+
+        /* --- Section 03: 项目流水线 --- */
+        .stream-pipeline { display: flex; flex-direction: column; gap: 1rem; }
+
+        .pipeline-item {
+            position: relative;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 2rem 2.2rem; background-color: rgba(15, 23, 42, 0.45); border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer; transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease, border-color 0.4s ease, padding 0.4s ease, background-color 0.4s ease;
+        }
+        .pipeline-item:hover { padding-left: 2.8rem; padding-right: 2.8rem; background-color: rgba(30, 41, 59, 0.7); }
+        .pipeline-item::after {
+            content: ''; position: absolute; left: 24px; bottom: 0; width: 0; height: 2px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); transition: width 0.4s ease;
+        }
+        .pipeline-item:hover::after { width: calc(100% - 48px); }
+
+        .pipeline-title-group { transform: translateZ(20px); }
+        .pipeline-title-group h3 { font-size: 1.65rem; font-weight: 800; color: var(--text-high); transition: color 0.3s ease; letter-spacing: -0.01em; }
+        .pipeline-item:hover h3 { color: var(--color-primary); }
+        .pipeline-title-group .terminal-prefix { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; text-transform: uppercase; }
+
+        .pipeline-meta { text-align: right; transform: translateZ(25px); }
+        .pipeline-meta .position { font-size: 1rem; font-weight: 700; color: var(--text-high); }
+        .pipeline-meta .tech-core { font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-secondary); margin-top: 0.3rem; text-transform: uppercase; display: block; font-weight: 600;}
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           🏁 交互弹窗总线
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .overlay-mask {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(5, 8, 16, 0.6); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            z-index: 200; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .overlay-mask.active { opacity: 1; pointer-events: auto; }
+
+        .modal-container {
+            background-color: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1);
+            width: 92%; max-width: 880px; max-height: 85vh; padding: 3.5rem; border-radius: 32px;
+            transform: translate3d(0, 20px, 0); opacity: 0; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto; position: relative; box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+        }
+        .overlay-mask.active .modal-container { transform: translate3d(0, 0, 0); opacity: 1; border-color: var(--color-primary); }
+
+        .btn-close-modal {
+            position: absolute; top: 2rem; right: 2rem; background: rgba(255, 255, 255, 0.05);
+            color: var(--text-high); border: none; width: 40px; height: 40px; border-radius: 50%;
+            cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;
+        }
+        .btn-close-modal:hover { background: var(--color-primary); color: #fff; transform: rotate(90deg); }
+
+        .modal-inject h2 { font-size: 2.1rem; font-weight: 900; color: var(--text-high); letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 0.6rem; }
+        .modal-inject .badge-tags { margin-bottom: 1.8rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .modal-inject .stack-tag {
+            font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem;
+            padding: 0.35rem 0.75rem; border-radius: 8px; background: rgba(249, 115, 22, 0.15); color: var(--color-primary);
+        }
+        .modal-inject h4 { font-size: 1.15rem; font-weight: 800; color: var(--text-high); margin-top: 1.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .modal-inject h4::before { content: ''; display: inline-block; width: 4px; height: 16px; background: var(--color-secondary); border-radius: 2px; }
+        .modal-inject p, .modal-inject ul { color: var(--text-base); line-height: 1.8; font-size: 1rem; text-align: justify; }
+        .modal-inject li { margin-bottom: 0.5rem; list-style-position: inside; color: var(--text-base); }
+        .modal-inject strong { color: var(--text-high); }
+
+        /* 📱 平板 / 窄屏降级 */
+        @media (max-width: 1200px) {
+            :root { --screen-padding: 5vw; }
+            .spatial-3d-stage { display: none !important; }
+            .spatial-section { padding: 5rem var(--screen-padding) 3rem; }
+            .grid-hero { grid-template-columns: 1fr; gap: 2.5rem; }
+            .avatar-brand-row { flex-direction: column; align-items: flex-start; gap: 1.2rem; }
+            .user-avatar-slot { width: 130px; height: 130px; max-width: none; max-height: none; border-radius: 28px; }
+            .hero-profile { padding-left: 0; border-left: none; border-top: 3px solid var(--color-primary); padding-top: 1.8rem; }
+            .matrix-container { grid-template-columns: 1fr; gap: 1.2rem; }
+            .structural-tilt { transform: none !important; box-shadow: var(--shadow-spatial-sm) !important; border-color: rgba(255,255,255,0.08) !important;}
+            .structural-tilt::before { display: none !important; }
+            .edu-headline, .edu-timeline, .edu-details, .matrix-card h3, .matrix-card p, .matrix-card ul, .tag-date, .pipeline-title-group, .pipeline-meta { transform: none !important; }
+            .pipeline-item { position: relative; flex-direction: column; align-items: flex-start; gap: 0.8rem; padding: 1.6rem 1.4rem; }
+            .pipeline-meta { text-align: left; }
+            .spatial-nav, .parallax-giant-backdrop { display: none !important; }
+            .modal-container { padding: 2.5rem 1.5rem; }
+        }
+
+        /* 📱 移动端底部导航（替代隐藏侧边栏） */
+        .mobile-nav-bar {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(9, 13, 22, 0.92);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(249, 115, 22, 0.2);
+            padding: 0.6rem 0.5rem;
+            padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+        }
+        .mobile-nav-bar-inner {
+            display: flex; justify-content: space-around; align-items: center;
+            max-width: 480px; margin: 0 auto;
+        }
+        .mobile-nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+            padding: 0.5rem 0.25rem; text-decoration: none; color: var(--text-muted);
+            font-family: var(--font-mono); font-size: 0.6rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.03em;
+            transition: color 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mobile-nav-item::before {
+            content: ''; width: 6px; height: 6px; border-radius: 50%;
+            background: #334155; transition: all 0.3s ease;
+        }
+        .mobile-nav-item.active { color: var(--color-primary); }
+        .mobile-nav-item.active::before {
+            background: var(--color-primary); transform: scale(1.5);
+            box-shadow: 0 0 8px var(--color-primary);
+        }
+
+        /* 📱 手机端精细适配 */
+        @media (max-width: 768px) {
+            :root { --screen-padding: 1.25rem; }
+
+            .spatial-section {
+                padding: 3.5rem var(--screen-padding) 2rem;
+                scroll-margin-top: 1rem;
+            }
+            .spatial-section:last-of-type {
+                padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+            }
+
+            .mobile-nav-bar { display: block; }
+
+            .hero-names h1 { font-size: 2.4rem; letter-spacing: -0.03em; }
+            .hero-names .job-title { font-size: 0.82rem; line-height: 1.4; }
+            .section-caption h2 { font-size: 1.75rem; }
+            .section-caption .slug { font-size: 0.72rem; }
+
+            .metadata-cluster { grid-template-columns: 1fr; gap: 1rem; }
+            .metadata-item span { font-size: 0.95rem; word-break: break-all; }
+
+            .hero-profile p { font-size: 0.95rem; text-align: left; line-height: 1.75; }
+            .hero-profile h3 { font-size: 0.78rem; }
+
+            .card-education { padding: 1.4rem; }
+            .edu-headline { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+            .edu-headline h4 { font-size: 1.05rem; line-height: 1.35; }
+            .edu-headline .degree { font-size: 0.88rem; }
+            .edu-details { font-size: 0.88rem; text-align: left; }
+
+            .matrix-card { padding: 1.6rem 1.4rem; }
+            .matrix-card h3 { font-size: 1.1rem; }
+            .matrix-card p, .matrix-card li { font-size: 0.88rem; text-align: left; }
+
+            .pipeline-title-group h3 { font-size: 1.15rem; line-height: 1.35; }
+            .pipeline-title-group .terminal-prefix { font-size: 0.68rem; word-break: break-all; }
+            .pipeline-meta .position { font-size: 0.9rem; }
+            .pipeline-meta .tech-core { font-size: 0.72rem; word-break: break-all; }
+
+            .modal-container {
+                width: 96%; max-height: 90vh;
+                padding: 2rem 1.25rem 1.5rem;
+                border-radius: 20px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .btn-close-modal { top: 1rem; right: 1rem; width: 36px; height: 36px; }
+            .modal-inject h2 { font-size: 1.35rem; }
+            .modal-inject h4 { font-size: 1rem; margin-top: 1.4rem; }
+            .modal-inject p, .modal-inject ul { font-size: 0.9rem; text-align: left; }
+        }
+
+        @media (max-width: 480px) {
+            .hero-names h1 { font-size: 2rem; }
+            .user-avatar-slot { width: 100px; height: 100px; border-radius: 22px; }
+            .avatar-brand-row { gap: 1rem; }
+            .section-caption h2 { font-size: 1.5rem; }
+            .pipeline-item { padding: 1.25rem 1rem; }
+            .mobile-nav-item { font-size: 0.55rem; }
+        }
+
+        /* 触摸设备：关闭 hover 位移，避免点击区域抖动 */
+        @media (hover: none) {
+            .pipeline-item:hover { padding-left: inherit; padding-right: inherit; background-color: rgba(15, 23, 42, 0.45); }
+            .user-avatar-slot:hover { transform: none; }
+            .metadata-item:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="spatial-3d-stage" id="spatial3DStage">
+        <canvas id="tactileCanvas"></canvas>
+        <div class="magic-glow-blob blob-orange"></div>
+        <div class="magic-glow-blob blob-blue"></div>
+        <div class="magic-glow-blob blob-purple"></div>
+        <div class="parallax-giant-backdrop" id="paxText1" style="top: 15vh; transform: translateZ(-250px);">CREATIVE DEVELOPER</div>
+        <div class="parallax-giant-backdrop" id="paxText2" style="top: 85vh; left: 12vw; transform: translateZ(-350px);">FULLSTACK SYSTEM</div>
+    </div>
+
+    <nav class="spatial-nav">
+        <a href="#about" class="nav-node active" data-nav="about"><span class="nav-node-index">PROFILE // 个人常设</span></a>
+        <a href="#capabilities" class="nav-node" data-nav="capabilities"><span class="nav-node-index">MATRIX // 履历资质</span></a>
+        <a href="#works" class="nav-node" data-nav="works"><span class="nav-node-index">PIPELINE // 核心研行</span></a>
+    </nav>
+
+    <nav class="mobile-nav-bar" aria-label="移动端导航">
+        <div class="mobile-nav-bar-inner">
+            <a href="#about" class="mobile-nav-item active" data-nav="about">个人</a>
+            <a href="#capabilities" class="mobile-nav-item" data-nav="capabilities">资质</a>
+            <a href="#works" class="mobile-nav-item" data-nav="works">项目</a>
+        </div>
+    </nav>
+
+    <section id="about" class="spatial-section">
+        <div class="grid-hero">
+            <div class="hero-identity-wrapper">
+                <div class="avatar-brand-row">
+                    <div class="user-avatar-slot">
+                        <img src="avatar.jpg" alt="黄奕铨">
+                    </div>
+                    <div class="hero-names">
+                        <h1>黄奕铨</h1>
+                        <div class="job-title">Software Engineer // Full-Stack</div>
+                    </div>
+                </div>
+                <div class="metadata-cluster">
+                    <div class="metadata-item">M_Phone <span>19865291563</span></div>
+                    <div class="metadata-item">E_Mail <span>1789893270@qq.com</span></div>
+                    <div class="metadata-item">L_Location <span>广东省东莞市</span></div>
+                    <div class="metadata-item">B_Timestamp <span>2004.03</span></div>
+                </div>
+            </div>
+            <div class="hero-profile">
+                <h3>[ABOUT ME // 个人简介]</h3>
+                <p>具备流线项目深度闭环与落地部署能力的软件工程开发者。核心专长聚焦于计算机视觉（基于 OpenCV、Dlib 进行细粒度面部行为量化算法改造）与高健壮性全栈系统交付。崇尚清晰的架构规范与面向未来的敏捷迭代能力，擅长将复杂的底层数据转化为高感知度的交互应用，并具备在敏捷开发周期中强力推动全栈闭环的高效沟通意识。</p>
+
+                <div class="card-education structural-tilt">
+                    <div class="edu-headline">
+                        <h4>东莞理工学院城市学院</h4>
+                        <span class="degree">软件工程（本科）</span>
+                    </div>
+                    <span class="edu-timeline">2022.09 - 2026.07 // ACADEMIC DEPLOYMENT</span>
+                    <p class="edu-details">
+                        <strong>主修大类：</strong> 数据库系统设计、深度数据 analysis 基础、现代软件工程导论、IT project 管理规范、Python/Java高级面向对象系统构建、分布式计算机网络、电子商务全局生态等。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="capabilities" class="spatial-section">
+        <div class="section-caption">
+            <span class="slug">[01 // CAPABILITIES_MATRIX]</span>
+            <h2>履历与资质矩阵</h2>
+        </div>
+        <div class="matrix-container">
+            <div class="matrix-card structural-tilt">
+                <h3>底层技术群</h3>
+                <p>深度打通 Python 全链路开发生态。熟练运用 Streamlit 高效交付可交互的中后台原型系统与算法可视化大屏；擅长结合 OpenCV 与 Dlib 深度定制图像捕捉、面部网格特征提取及高维行为逻辑量化模型；具备严谨的 MySQL 结构化建表思维、查询优化及全栈综合调试硬实力。</p>
+            </div>
+            <div class="matrix-card structural-tilt">
+                <h3>专业资质荣誉</h3>
+                <ul>
+                    <li>2023 荣誉授予“优秀大学生”称号</li>
+                    <li>2024 荣誉授予“优秀学生干部”称谓</li>
+                    <li>2022 - 2024 连续斩获“校三等奖学金”</li>
+                    <li>国家四级大学英语（CET4）资质认证</li>
+                    <li>全国普通话二级乙等证书</li>
+                </ul>
+            </div>
+            <div class="matrix-card structural-tilt">
+                <span class="tag-date">2025.05 - 2025.06</span>
+                <h3>海外网络运营</h3>
+                <p><strong>Facebook 跨境电商 / 流量中枢运营销售</strong><br>在职期间，独立主导海外社媒矩阵的内容构建、粉丝沉淀和跨境商品流转全生命周期跟进。借此锤炼出了高度敏锐的海外受众沟通习惯，以及跨多方机构高效协同、推进商业指标闭环的跨域综合素养。</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="works" class="spatial-section">
+        <div class="section-caption">
+            <span class="slug">[02 // DEPLOYED_PROJECT_PIPELINE]</span>
+            <h2>核心项目研行录</h2>
+        </div>
+        <div class="stream-pipeline">
+            <div class="pipeline-item structural-tilt" onclick="launchModal('cv')">
+                <div class="pipeline-title-group">
+                    <span class="terminal-prefix">pipeline_task_01 // COMPUTER_VISION</span>
+                    <h3>基于Python的课堂专注度辅助分析系统</h3>
+                </div>
+                <div class="pipeline-meta">
+                    <div class="position">算法研发与全栈架构负责人</div>
+                    <span class="tech-core">Python / Streamlit / OpenCV / Dlib / MySQL</span>
+                </div>
+            </div>
+            <div class="pipeline-item structural-tilt" onclick="launchModal('agent')">
+                <div class="pipeline-title-group">
+                    <span class="terminal-prefix">pipeline_task_02 // COGNITIVE_INTELLIGENCE</span>
+                    <h3>企业级多智能体协同流程自动化系统</h3>
+                </div>
+                <div class="pipeline-meta">
+                    <div class="position">全栈独立架构师</div>
+                    <span class="tech-core">AI Agent / Prompt Chain / LLM Ecosystem</span>
+                </div>
+            </div>
+            <div class="pipeline-item structural-tilt" onclick="launchModal('lodog')">
+                <div class="pipeline-title-group">
+                    <span class="terminal-prefix">pipeline_task_03 // ECOSYSTEM_APPLICATION</span>
+                    <h3>“LoDog” 宠物社区服务交互小程序</h3>
+                </div>
+                <div class="pipeline-meta">
+                    <div class="position">全栈开发主导人</div>
+                    <span class="tech-core">WeChat Mini Program / CloudBase Cloud</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="overlay-mask" id="globalOverlay" onclick="interceptClose(event)">
+        <div class="modal-container">
+            <button class="btn-close-modal" onclick="interceptClose(event)">✕</button>
+            <div id="modalCoreContent" class="modal-inject"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initTactileCanvasEngine();
+            setup3DStageInteractions();
+            setupCard3DTiltEffects();
+            setupKeyboardClosing();
+        });
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🔮 Canvas 物理阻尼弹簧凹陷网格引擎
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function initTactileCanvasEngine() {
+            const canvas = document.getElementById('tactileCanvas');
+            if (!canvas || window.innerWidth <= 1200) return;
+            const ctx = canvas.getContext('2d');
+
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            let points = [];
+            const spacing = 50;
+            let cols = Math.ceil(width / spacing) + 2;
+            let rows = Math.ceil(height / spacing) + 2;
+
+            const pointer = { x: -2000, y: -2000, activeX: -2000, activeY: -2000 };
+
+            window.addEventListener('mousemove', (e) => {
+                pointer.activeX = e.clientX;
+                pointer.activeY = e.clientY;
+            }, { passive: true });
+
+            window.addEventListener('mouseleave', () => { pointer.activeX = -2000; pointer.activeY = -2000; });
+
+            function buildMesh() {
+                points = [];
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                cols = Math.ceil(width / spacing) + 2;
+                rows = Math.ceil(height / spacing) + 2;
+
+                for (let c = 0; c < cols; c++) {
+                    points[c] = [];
+                    for (let r = 0; r < rows; r++) {
+                        const originalX = (c - 0.5) * spacing;
+                        const originalY = (r - 0.5) * spacing;
+                        points[c][r] = { x: originalX, y: originalY, ox: originalX, oy: originalY, vx: 0, vy: 0 };
+                    }
+                }
+            }
+            buildMesh();
+            window.addEventListener('resize', buildMesh);
+
+            function updateAndRenderGrid() {
+                ctx.clearRect(0, 0, width, height);
+
+                pointer.x += (pointer.activeX - pointer.x) * 0.12;
+                pointer.y += (pointer.activeY - pointer.y) * 0.12;
+
+                const maxImpactRadius = 180;
+                const springTension = 0.07;
+                const dampening = 0.78;
+
+                for (let c = 0; c < cols; c++) {
+                    for (let r = 0; r < rows; r++) {
+                        const p = points[c][r];
+                        const dx = p.ox - pointer.x;
+                        const dy = p.oy - pointer.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        let targetX = p.ox;
+                        let targetY = p.oy;
+
+                        if (distance < maxImpactRadius) {
+                            const force = (maxImpactRadius - distance) / maxImpactRadius;
+                            const dipPush = force * 40;
+                            targetX = p.ox + (dx / (distance || 1)) * dipPush;
+                            targetY = p.oy + (dy / (distance || 1)) * dipPush;
+                        }
+
+                        const ax = (targetX - p.x) * springTension;
+                        const ay = (targetY - p.y) * springTension;
+
+                        p.vx = (p.vx + ax) * dampening;
+                        p.vy = (p.vy + ay) * dampening;
+
+                        p.x += p.vx;
+                        p.y += p.vy;
+                    }
+                }
+
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
+                ctx.lineWidth = 1;
+
+                for (let c = 0; c < cols; c++) {
+                    for (let r = 0; r < rows; r++) {
+                        if (c < cols - 1) {
+                            ctx.beginPath(); ctx.moveTo(points[c][r].x, points[c][r].y);
+                            ctx.lineTo(points[c + 1][r].x, points[c + 1][r].y); ctx.stroke();
+                        }
+                        if (r < rows - 1) {
+                            ctx.beginPath(); ctx.moveTo(points[c][r].x, points[c][r].y);
+                            ctx.lineTo(points[c][r + 1].x, points[c][r + 1].y); ctx.stroke();
+                        }
+
+                        const p = points[c][r];
+                        const dx = p.x - pointer.x; const dy = p.y - pointer.y;
+                        const curDist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (curDist < 120) {
+                            const brightness = (120 - curDist) / 120;
+                            ctx.fillStyle = `rgba(249, 115, 22, ${brightness * 0.45})`;
+                            ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
+                        }
+                    }
+                }
+                requestAnimationFrame(updateAndRenderGrid);
+            }
+            requestAnimationFrame(updateAndRenderGrid);
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🌌 全局 3D 舞台旋转与视差流动
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function setup3DStageInteractions() {
+            const spatial3DStage = document.getElementById('spatial3DStage');
+            const pax1 = document.getElementById('paxText1');
+            const pax2 = document.getElementById('paxText2');
+
+            const spySections = document.querySelectorAll('.spatial-section');
+            const navLinks = document.querySelectorAll('[data-nav]');
+
+            let mouseX = 0, mouseY = 0;
+            let interpX = 0, interpY = 0;
+            const frictionCoefficient = 0.05;
+
+            window.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth) - 0.5;
+                mouseY = (e.clientY / window.innerHeight) - 0.5;
+            }, { passive: true });
+
+            function render3DLoop() {
+                interpX += (mouseX - interpX) * frictionCoefficient;
+                interpY += (mouseY - interpY) * frictionCoefficient;
+
+                const rotateX = -interpY * 9;
+                const rotateY = interpX * 9;
+
+                if (spatial3DStage && window.innerWidth > 1200) {
+                    spatial3DStage.style.transform = `scale(1.06) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                }
+
+                const currentScroll = window.scrollY;
+                if (pax1) pax1.style.transform = `translateZ(-150px) translate3d(${-currentScroll * 0.06}px, 0, 0)`;
+                if (pax2) pax2.style.transform = `translateZ(-250px) translate3d(${currentScroll * 0.04}px, 0, 0)`;
+
+                requestAnimationFrame(render3DLoop);
+            }
+            requestAnimationFrame(render3DLoop);
+
+            const isMobile = window.innerWidth <= 768;
+            const observerOptions = {
+                root: null,
+                rootMargin: isMobile ? '-10% 0px -55% 0px' : '-30% 0px -40% 0px',
+                threshold: 0
+            };
+            const sectionSpyObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const activeId = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('data-nav') === activeId) link.classList.add('active');
+                        });
+                    }
+                });
+            }, observerOptions);
+            spySections.forEach(section => sectionSpyObserver.observe(section));
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🔮 ✨ 细节打磨：卡片局部 3D 悬浮倾斜 + 全息高光联动
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function setupCard3DTiltEffects() {
+            if (window.innerWidth <= 1200) return;
+            const cards = document.querySelectorAll('.structural-tilt');
+
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+
+                    const rotateX = ((centerY - y) / centerY) * 7;
+                    const rotateY = ((x - centerX) / centerX) * 7;
+
+                    // 🌟 注入全息反光坐标变量驱动 CSS Background
+                    card.style.setProperty('--glare-x', `${x}px`);
+                    card.style.setProperty('--glare-y', `${y}px`);
+
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(12px)`;
+                    card.style.borderColor = 'rgba(249, 115, 22, 0.4)';
+                    card.style.boxShadow = '0 30px 50px -15px rgba(0, 0, 0, 0.7), 0 0 25px -5px rgba(249, 115, 22, 0.15)';
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)`;
+                    card.style.borderColor = ''; card.style.boxShadow = '';
+                });
+            });
+        }
+
+        function setupKeyboardClosing() {
+            window.addEventListener('keydown', (e) => {
+                const mask = document.getElementById('globalOverlay');
+                if (e.key === 'Escape' && mask && mask.classList.contains('active')) {
+                    mask.classList.remove('active'); document.body.style.overflow = '';
+                }
+            });
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🏁 文本库打磨：学术级/工业级高能描述对齐
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const dataRepository = {
+            'cv': `
+                <h2>基于Python的课堂专注度辅助分析系统</h2>
+                <div class="badge-tags">
+                    <span class="stack-tag">Python</span>
+                    <span class="stack-tag">Streamlit</span>
+                    <span class="stack-tag">OpenCV</span>
+                    <span class="stack-tag">Dlib</span>
+                    <span class="stack-tag">MySQL</span>
+                </div>
+                <h4>项目描述</h4>
+                <p>面向数字化课堂形态，自主设计并交付了一套集“多路视频并发流捕获、细粒度行为特征量化、多维状态看板协同、离线教务报告追溯”于一体的高能教务分析中后台。通过对底层多模态视觉数据的实时提纯，计算非接触式行为指标，为教学质量评测、课堂专注度演变趋势提供高置信度的数据闭环支撑。</p>
+                <h4>核心工程攻关与规范实现</h4>
+                <ul>
+                    <li><strong>关系型数据底座架构：</strong> 基于 <strong>MySQL</strong> 设计高健壮的数据表群，严谨规约用户审计表（User）、数字化视频资产关系映射表、异步流水任务状态机及历史快照报告。建立合理的索引结构，全面支撑系统级海量行为高频检索。</li>
+                    <li><strong>精细化 RBAC 级权限访问控制：</strong> 深度闭环了教师、教务管理系统、系统网关管理员三层角色的鉴权网络。内聚封装了高安全的账户注册流、动态 Session 拦截器、管理员一键账户冻结、全链路高敏感操作的审计溯源日志。</li>
+                    <li><strong>计算管线参数化改造与能效调节：</strong> 抽象并解耦核心视觉解析管线，支持教务端对“抽帧步长（视频压缩率）”、“单任务最大解析上限帧数”等关键底盘指标进行弹性动态调优，从而在硬件负载与解析精度间取得完美平衡。</li>
+                    <li><strong>高容错流媒体多线程转储优化：</strong> 规约流捕获多线程控制逻辑，大幅抑制流媒体死锁。针对非正常中断或手动强拆任务场景，设计了优雅的“强制状态降级与瞬时离线转储”防丢机制，自动将内存轨迹固化为 CSV，保障数据完整度。</li>
+                    <li><strong>全域交叉多维可视化看板：</strong> 运用流式渲染框架搭建多模态数据看板。完美支持多条件动态交叉过滤（如教师维度、时间轴范围等）、多班级专注度趋势曲线重叠比对、宏观均值/离散度离群点统计以及多格式报告的一键导出。</li>
+                </ul>
+            `,
+            'agent': `
+                <h2>企业级多智能体协同流程自动化系统</h2>
+                <div class="badge-tags">
+                    <span class="stack-tag">AI Agent</span>
+                    <span class="stack-tag">Prompt Chain</span>
+                    <span class="stack-tag">LLM Ecosystem</span>
+                </div>
+                <h4>项目描述</h4>
+                <p>探索大语言模型（LLM）生态在企业级内部中枢的场景落地。通过构建多智能体（Multi-Agent）拓扑架构，将高度复杂的、依赖人工决策的繁琐业务流程，拆解并映射为确定的自动化提示词链条（Prompt Chain），全面释放传统办公流程的生产力壁垒。</p>
+                <h4>高阶演进航向预留</h4>
+                <ul>
+                    <li><strong>多智能体冲突调度网关：</strong> 拟抽象多 Agent 并发任务冲突与优先级仲裁控制器，确保复杂任务在深层嵌套条件下的执行强一致性。</li>
+                    <li><strong>企业知识库增强型 RAG 链条：</strong> 规划集成向量数据库与私有知识切片系统，构建具备上下文强相关感知、前置安全围栏过滤的提示词管线。</li>
+                    <li><strong>异步有向无环图（DAG）状态事务控制：</strong> 建立高鲁棒性的异步任务状态机模型，提供任务失败超时自动回滚、人工介入熔断兜底等工程级控制底座。</li>
+                </ul>
+            `,
+            'lodog': `
+                <h2>“LoDog” 宠物社区服务交互小程序</h2>
+                <div class="badge-tags">
+                    <span class="stack-tag">WeChat Mini Program</span>
+                    <span class="stack-tag">CloudBase Serverless</span>
+                </div>
+                <h4>项目描述</h4>
+                <p>针对城市宠物主线下社交组织碎裂、物理验证核销繁琐等痛点，主导开发了一款高韧性、低延迟的原生微信小程序。全量拥抱 Serverless 弹性云架构，极大地消减了实体服务器的运维边际成本，全面护航敏捷迭代。”</p>
+                <h4>高阶演进航向预留</h4>
+                <ul>
+                    <li><strong>云数据库高并发集合（Collections）设计：</strong> 精细化定义宠物主关系主表、线下活动快照、分布式核销集合，规约关联索引以对抗密集请求下的并发瓶颈。</li>
+                    <li><strong>Serverless 云函数强事务核销控制：</strong> 依托腾讯云 CloudBase 编写具有事务保护的云端原子函数（Cloud Functions），在工程层面规避多点重复核销引起的脏读与死锁死循环。</li>
+                </ul>
+            `
+        };
+
+        const mask = document.getElementById('globalOverlay');
+        const injectContainer = document.getElementById('modalCoreContent');
+
+        function launchModal(id) {
+            if(!injectContainer || !mask) return;
+            injectContainer.innerHTML = dataRepository[id] || '<h2>Data synchronization in progress...</h2>';
+            mask.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function interceptClose(e) {
+            if(!mask) return;
+            if (e.target === mask || e.target.classList.contains('btn-close-modal')) {
+                mask.classList.remove('active'); document.body.style.overflow = '';
+            }
+        }
+    </script>
+</body>
+</html>

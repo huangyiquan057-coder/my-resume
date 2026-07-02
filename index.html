@@ -436,6 +436,37 @@
         }
         .github-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
+        /* ── 证书图片 Modal ── */
+        .cert-modal {
+            width: 92%; max-width: 900px; max-height: 85vh;
+            padding: 0;
+            transform: translateY(24px) scale(0.97); opacity: 0;
+            transition: all 0.45s cubic-bezier(0.16,1,0.3,1);
+            overflow: hidden;
+            border-radius: var(--radius-lg);
+        }
+        .overlay.active .cert-modal { transform: translateY(0) scale(1); opacity: 1; }
+        .cert-img-wrap {
+            width: 100%;
+            background: linear-gradient(135deg, #f0f4f8, #e2e8f0);
+            display: flex; align-items: center; justify-content: center;
+            padding: 1rem;
+        }
+        .cert-img-wrap img {
+            max-width: 100%; max-height: 75vh;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+        .cert-caption {
+            padding: 1rem 1.5rem;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            background: var(--glass);
+            backdrop-filter: blur(24px) saturate(180%);
+        }
+        .cert-caption strong { color: var(--text-high); font-weight: 600; }
+
         /* ── 3D Tilt (desktop) ── */
         .tilt-enabled { transform-style: preserve-3d; will-change: transform; }
 
@@ -645,6 +676,7 @@
                         <li>2022–2024 校三等奖学金</li>
                         <li>英语 CET-4</li>
                         <li>普通话二级乙等</li>
+                        <li style="cursor: pointer; color: var(--primary); font-weight: 500;" onclick="showCert('yingdao')">🏅 影刀初级RPA认证</li>
                     </ul>
                 </div>
             </div>
@@ -992,7 +1024,33 @@ const MODAL_DATA = {
 const overlay = document.getElementById('overlay');
 const modalContent = document.getElementById('modalContent');
 
+const CERT_DATA = {
+    yingdao: {
+        title: '影刀初级RPA技能证书',
+        img: 'yingdao_cert.jpg',
+        issuer: '影刀学院',
+        date: '2026年7月'
+    }
+};
+
+function showCert(id) {
+    const cert = CERT_DATA[id];
+    if (!cert) return;
+    modalContent.innerHTML = `
+        <div class="cert-img-wrap">
+            <img src="${cert.img}" alt="${cert.title}" onerror="this.style.display='none';this.parentElement.innerHTML='<p style=\\'color:var(--text-muted);padding:3rem;text-align:center;\\'>请将证书图片命名为 ${cert.img} 放在简历目录下</p>'">
+        </div>
+        <div class="cert-caption">
+            <strong>${cert.title}</strong> · ${cert.issuer} · ${cert.date}
+        </div>
+    `;
+    modalContent.parentElement.classList.add('cert-modal');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
 function launchModal(id) {
+    modalContent.parentElement.classList.remove('cert-modal');
     modalContent.innerHTML = MODAL_DATA[id] || '<h2>Loading…</h2>';
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
